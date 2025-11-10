@@ -140,17 +140,41 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
 
-          # Create temp file with new release notes
-          cat release-notes.md > temp-changelog.md
-          echo "" >> temp-changelog.md
-
-          # Append existing CHANGELOG if it exists
-          if [ -f CHANGELOG.md ]; then
-            cat CHANGELOG.md >> temp-changelog.md
+          # Strip the "# Release Notes for vX.X.X" header if present
+          # Keep only from "## [vX.X.X]" onwards
+          if grep -q "^# Release Notes for" release-notes.md; then
+            sed -n '/^## \[/,$p' release-notes.md > release-notes-clean.md
+          else
+            cp release-notes.md release-notes-clean.md
           fi
 
-          # Replace CHANGELOG
-          mv temp-changelog.md CHANGELOG.md
+          # Create temp file with new release notes
+          cat release-notes-clean.md > temp-changelog.md
+          echo "" >> temp-changelog.md
+          echo "---" >> temp-changelog.md
+          echo "" >> temp-changelog.md
+
+          # Append existing CHANGELOG if it exists, but skip the header
+          if [ -f CHANGELOG.md ]; then
+            # Skip the "# Changelog" header and "All notable changes..." intro
+            sed -n '/^## \[/,$p' CHANGELOG.md >> temp-changelog.md
+          fi
+
+          # Add header at the top
+          cat > CHANGELOG.md << 'EOF'
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+---
+
+EOF
+          cat temp-changelog.md >> CHANGELOG.md
+
+          # Cleanup
+          rm -f release-notes-clean.md temp-changelog.md
 
           echo "📝 Updated CHANGELOG.md with release notes"
 
