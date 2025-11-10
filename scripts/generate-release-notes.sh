@@ -1,23 +1,45 @@
 #!/bin/bash
 
-# Script to generate AI-enhanced release notes using Cerebras API
-# Usage: ./generate-release-notes.sh <version> [since-tag] [api-provider]
+# Script to generate AI-enhanced release notes using multiple AI providers
+# Usage: ./generate-release-notes.sh <version> [since-tag] [api-provider] [model]
 #
-# Environment variables required:
-#   CEREBRAS_API_KEY - API key for Cerebras
-#   GROK_API_KEY - API key for Grok (alternative)
+# Supported providers: openai, anthropic, cerebras, groq
+#
+# Environment variables:
+#   API Keys (required for chosen provider):
+#     OPENAI_API_KEY - API key for OpenAI
+#     ANTHROPIC_API_KEY - API key for Anthropic
+#     CEREBRAS_API_KEY - API key for Cerebras
+#     GROQ_API_KEY - API key for Groq
+#
+#   Models (optional, uses defaults if not specified):
+#     OPENAI_MODEL - OpenAI model (default: gpt-5-nano)
+#     ANTHROPIC_MODEL - Anthropic model (default: claude-haiku-4-5)
+#     CEREBRAS_MODEL - Cerebras model (default: gpt-oss-120b)
+#     GROQ_MODEL - Groq model (default: llama-3.3-70b-versatile)
 
 set -e
 
 VERSION="${1:-}"
 SINCE_TAG="${2:-}"
-API_PROVIDER="${3:-cerebras}"  # cerebras or grok
+API_PROVIDER="${3:-cerebras}"
+MODEL_OVERRIDE="${4:-}"
+
+# Set default models
+OPENAI_MODEL="${OPENAI_MODEL:-gpt-5-nano}"
+ANTHROPIC_MODEL="${ANTHROPIC_MODEL:-claude-haiku-4-5}"
+CEREBRAS_MODEL="${CEREBRAS_MODEL:-gpt-oss-120b}"
+GROQ_MODEL="${GROQ_MODEL:-llama-3.3-70b-versatile}"
 
 if [ -z "$VERSION" ]; then
-    echo "Usage: $0 <version> [since-tag] [api-provider]" >&2
-    echo "Example: $0 v1.0.0" >&2
-    echo "Example: $0 v1.0.0 v0.9.0" >&2
-    echo "Example: $0 v1.0.0 v0.9.0 grok" >&2
+    echo "Usage: $0 <version> [since-tag] [api-provider] [model]" >&2
+    echo "" >&2
+    echo "Examples:" >&2
+    echo "  $0 v1.0.0" >&2
+    echo "  $0 v1.0.0 v0.9.0 openai" >&2
+    echo "  $0 v1.0.0 v0.9.0 anthropic claude-opus-4" >&2
+    echo "" >&2
+    echo "Supported providers: openai, anthropic, cerebras, groq" >&2
     exit 1
 fi
 
@@ -45,18 +67,200 @@ fi
 
 echo "✅ AI prompt generated (~$(echo "$AI_PROMPT" | wc -c) characters)" >&2
 
-# Function to call Cerebras API
-call_cerebras() {
+# Validation function to check provider configuration
+validate_provider_config() {
+    local provider="$1"
+    local required_key=""
+    local setup_url=""
+
+    case "$provider" in
+        openai)
+            required_key="OPENAI_API_KEY"
+            setup_url="https://platform.openai.com/api-keys"
+            ;;
+        anthropic)
+            required_key="ANTHROPIC_API_KEY"
+            setup_url="https://console.anthropic.com/settings/keys"
+            ;;
+        cerebras)
+            required_key="CEREBRAS_API_KEY"
+            setup_url="https://cerebras.ai"
+            ;;
+        groq)
+            required_key="GROQ_API_KEY"
+            setup_url="https://console.groq.com/keys"
+            ;;
+        *)
+            echo "❌ Unknown provider: $provider" >&2
+            echo "Supported providers: openai, anthropic, cerebras, groq" >&2
+            return 1
+            ;;
+    esac
+
+    # Check if the required API key is set
+    if [ -z "${!required_key}" ]; then
+        echo "❌ ${required_key} environment variable not set" >&2
+        echo "" >&2
+        echo "To use the $provider provider:" >&2
+        echo "  1. Get an API key from: $setup_url" >&2
+        echo "  2. Set the environment variable: export ${required_key}=your-key-here" >&2
+        echo "  3. Or add it to GitHub Secrets if running in CI" >&2
+        echo "" >&2
+        return 1
+    fi
+
+    echo "✅ Provider validation passed for $provider" >&2
+    return 0
+}
+
+# Function to call OpenAI API
+call_openai() {
     local api_key="$1"
     local prompt="$2"
+    local model="${OPENAI_MODEL}"
 
-    echo "🧠 Calling Cerebras API (gpt-oss-120b)..." >&2
+    if [ -n "$MODEL_OVERRIDE" ]; then
+        model="$MODEL_OVERRIDE"
+    fi
+
+    echo "🧠 Calling OpenAI API ($model)..." >&2
 
     # Create JSON payload
     local json_payload=$(jq -n \
         --arg prompt "$prompt" \
+        --arg model "$model" \
         '{
-            model: "gpt-oss-120b",
+            model: $model,
+            messages: [
+                {
+                    role: "user",
+                    content: $prompt
+                }
+            ],
+            temperature: 0.6,
+            max_tokens: 4096,
+            top_p: 0.95
+        }')
+
+    # Call API
+    local response=$(curl -s --location 'https://api.openai.com/v1/chat/completions' \
+        --header 'Content-Type: application/json' \
+        --header "Authorization: Bearer ${api_key}" \
+        --data "$json_payload")
+
+    # Check for errors
+    if echo "$response" | jq -e '.error' > /dev/null 2>&1; then
+        local error_msg=$(echo "$response" | jq -r '.error.message')
+        local error_type=$(echo "$response" | jq -r '.error.type // "unknown"')
+        echo "❌ OpenAI API Error ($error_type): $error_msg" >&2
+
+        if [ "$error_type" = "invalid_api_key" ]; then
+            echo "💡 Check your OPENAI_API_KEY is correct" >&2
+        fi
+        return 1
+    fi
+
+    # Check if response is empty
+    if [ -z "$response" ]; then
+        echo "❌ Empty response from OpenAI API" >&2
+        return 1
+    fi
+
+    # Extract content
+    local content=$(echo "$response" | jq -r '.choices[0].message.content // empty')
+
+    if [ -z "$content" ]; then
+        echo "❌ No content in OpenAI API response" >&2
+        echo "Full response: $response" >&2
+        return 1
+    fi
+
+    echo "$content"
+}
+
+# Function to call Anthropic API
+call_anthropic() {
+    local api_key="$1"
+    local prompt="$2"
+    local model="${ANTHROPIC_MODEL}"
+
+    if [ -n "$MODEL_OVERRIDE" ]; then
+        model="$MODEL_OVERRIDE"
+    fi
+
+    echo "🧠 Calling Anthropic API ($model)..." >&2
+
+    # Create JSON payload (Anthropic uses slightly different structure)
+    local json_payload=$(jq -n \
+        --arg prompt "$prompt" \
+        --arg model "$model" \
+        '{
+            model: $model,
+            max_tokens: 4096,
+            temperature: 0.6,
+            messages: [
+                {
+                    role: "user",
+                    content: $prompt
+                }
+            ]
+        }')
+
+    # Call API (note: Anthropic uses x-api-key header)
+    local response=$(curl -s --location 'https://api.anthropic.com/v1/messages' \
+        --header 'Content-Type: application/json' \
+        --header "x-api-key: ${api_key}" \
+        --header 'anthropic-version: 2023-06-01' \
+        --data "$json_payload")
+
+    # Check for errors
+    if echo "$response" | jq -e '.error' > /dev/null 2>&1; then
+        local error_msg=$(echo "$response" | jq -r '.error.message')
+        local error_type=$(echo "$response" | jq -r '.error.type // "unknown"')
+        echo "❌ Anthropic API Error ($error_type): $error_msg" >&2
+
+        if [ "$error_type" = "authentication_error" ]; then
+            echo "💡 Check your ANTHROPIC_API_KEY is correct" >&2
+        fi
+        return 1
+    fi
+
+    # Check if response is empty
+    if [ -z "$response" ]; then
+        echo "❌ Empty response from Anthropic API" >&2
+        return 1
+    fi
+
+    # Extract content (Anthropic returns content in different structure)
+    local content=$(echo "$response" | jq -r '.content[0].text // empty')
+
+    if [ -z "$content" ]; then
+        echo "❌ No content in Anthropic API response" >&2
+        echo "Full response: $response" >&2
+        return 1
+    fi
+
+    echo "$content"
+}
+
+# Function to call Cerebras API
+call_cerebras() {
+    local api_key="$1"
+    local prompt="$2"
+    local model="${CEREBRAS_MODEL}"
+
+    if [ -n "$MODEL_OVERRIDE" ]; then
+        model="$MODEL_OVERRIDE"
+    fi
+
+    echo "🧠 Calling Cerebras API ($model)..." >&2
+
+    # Create JSON payload
+    local json_payload=$(jq -n \
+        --arg prompt "$prompt" \
+        --arg model "$model" \
+        '{
+            model: $model,
             stream: false,
             max_tokens: 4096,
             temperature: 0.6,
@@ -75,16 +279,31 @@ call_cerebras() {
         --header "Authorization: Bearer ${api_key}" \
         --data "$json_payload")
 
-    # Check for errors
+    # Check for errors (Cerebras uses both .error and direct error fields)
     if echo "$response" | jq -e '.error' > /dev/null 2>&1; then
-        echo "❌ API Error: $(echo "$response" | jq -r '.error.message')" >&2
-        echo "Full response: $response" >&2
+        local error_msg=$(echo "$response" | jq -r '.error.message')
+        local error_code=$(echo "$response" | jq -r '.error.code // "unknown"')
+        echo "❌ Cerebras API Error ($error_code): $error_msg" >&2
+
+        if [[ "$error_msg" == *"not found"* ]] || [[ "$error_msg" == *"does not exist"* ]]; then
+            echo "💡 Model not found. Available models: gpt-oss-120b, llama-3.3-70b, zai-glm-4.6" >&2
+        fi
+        return 1
+    elif echo "$response" | jq -e '.code' > /dev/null 2>&1; then
+        # Cerebras sometimes returns errors without .error wrapper
+        local error_msg=$(echo "$response" | jq -r '.message')
+        local error_code=$(echo "$response" | jq -r '.code')
+        echo "❌ Cerebras API Error ($error_code): $error_msg" >&2
+
+        if [ "$error_code" = "wrong_api_key" ] || [ "$error_code" = "invalid_api_key" ]; then
+            echo "💡 Check your CEREBRAS_API_KEY is correct" >&2
+        fi
         return 1
     fi
 
     # Check if response is empty
     if [ -z "$response" ]; then
-        echo "❌ Empty response from API" >&2
+        echo "❌ Empty response from Cerebras API" >&2
         return 1
     fi
 
@@ -92,7 +311,7 @@ call_cerebras() {
     local content=$(echo "$response" | jq -r '.choices[0].message.content // empty')
 
     if [ -z "$content" ]; then
-        echo "❌ No content in API response" >&2
+        echo "❌ No content in Cerebras API response" >&2
         echo "Full response: $response" >&2
         return 1
     fi
@@ -100,46 +319,56 @@ call_cerebras() {
     echo "$content"
 }
 
-# Function to call Grok API (xAI)
-call_grok() {
+# Function to call Groq API
+call_groq() {
     local api_key="$1"
     local prompt="$2"
+    local model="${GROQ_MODEL}"
 
-    echo "🧠 Calling Grok API (grok-beta)..." >&2
+    if [ -n "$MODEL_OVERRIDE" ]; then
+        model="$MODEL_OVERRIDE"
+    fi
+
+    echo "🧠 Calling Groq API ($model)..." >&2
 
     # Create JSON payload
     local json_payload=$(jq -n \
         --arg prompt "$prompt" \
+        --arg model "$model" \
         '{
-            model: "grok-beta",
-            stream: false,
-            max_tokens: 4096,
-            temperature: 0.6,
-            top_p: 0.95,
+            model: $model,
             messages: [
                 {
                     role: "user",
                     content: $prompt
                 }
-            ]
+            ],
+            temperature: 0.6,
+            max_tokens: 4096,
+            top_p: 0.95
         }')
 
     # Call API
-    local response=$(curl -s --location 'https://api.x.ai/v1/chat/completions' \
+    local response=$(curl -s --location 'https://api.groq.com/openai/v1/chat/completions' \
         --header 'Content-Type: application/json' \
         --header "Authorization: Bearer ${api_key}" \
         --data "$json_payload")
 
     # Check for errors
     if echo "$response" | jq -e '.error' > /dev/null 2>&1; then
-        echo "❌ API Error: $(echo "$response" | jq -r '.error.message')" >&2
-        echo "Full response: $response" >&2
+        local error_msg=$(echo "$response" | jq -r '.error.message')
+        local error_type=$(echo "$response" | jq -r '.error.type // "unknown"')
+        echo "❌ Groq API Error ($error_type): $error_msg" >&2
+
+        if [[ "$error_msg" == *"model"* ]] && [[ "$error_msg" == *"not found"* ]]; then
+            echo "💡 Model not found. Common models: llama-3.3-70b-versatile, mixtral-8x7b-32768" >&2
+        fi
         return 1
     fi
 
     # Check if response is empty
     if [ -z "$response" ]; then
-        echo "❌ Empty response from API" >&2
+        echo "❌ Empty response from Groq API" >&2
         return 1
     fi
 
@@ -147,7 +376,7 @@ call_grok() {
     local content=$(echo "$response" | jq -r '.choices[0].message.content // empty')
 
     if [ -z "$content" ]; then
-        echo "❌ No content in API response" >&2
+        echo "❌ No content in Groq API response" >&2
         echo "Full response: $response" >&2
         return 1
     fi
@@ -155,26 +384,29 @@ call_grok() {
     echo "$content"
 }
 
+# Validate provider configuration before making API call
+if ! validate_provider_config "$API_PROVIDER"; then
+    exit 1
+fi
+
 # Call the appropriate API
 RELEASE_NOTES=""
 case "$API_PROVIDER" in
+    openai)
+        RELEASE_NOTES=$(call_openai "$OPENAI_API_KEY" "$AI_PROMPT")
+        ;;
+    anthropic)
+        RELEASE_NOTES=$(call_anthropic "$ANTHROPIC_API_KEY" "$AI_PROMPT")
+        ;;
     cerebras)
-        if [ -z "$CEREBRAS_API_KEY" ]; then
-            echo "❌ CEREBRAS_API_KEY environment variable not set" >&2
-            exit 1
-        fi
         RELEASE_NOTES=$(call_cerebras "$CEREBRAS_API_KEY" "$AI_PROMPT")
         ;;
-    grok)
-        if [ -z "$GROK_API_KEY" ]; then
-            echo "❌ GROK_API_KEY environment variable not set" >&2
-            exit 1
-        fi
-        RELEASE_NOTES=$(call_grok "$GROK_API_KEY" "$AI_PROMPT")
+    groq)
+        RELEASE_NOTES=$(call_groq "$GROQ_API_KEY" "$AI_PROMPT")
         ;;
     *)
         echo "❌ Unknown API provider: $API_PROVIDER" >&2
-        echo "Supported providers: cerebras, grok" >&2
+        echo "Supported providers: openai, anthropic, cerebras, groq" >&2
         exit 1
         ;;
 esac

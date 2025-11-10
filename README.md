@@ -14,6 +14,7 @@ A Go-based CLI tool that generates intelligent, context-aware release notes by c
 - 🤖 **AI-Ready Prompts**: Generates comprehensive prompts for LLMs to write polished release notes
 - 📋 **Keep a Changelog Format**: Produces standardized markdown output
 - ⚡ **Fast & Lightweight**: Single binary with no runtime dependencies (except Git)
+- 🔌 **Easy Integration**: Add to any repository with GitHub Actions ([See Guide](docs/USAGE.md))
 
 ## Installation
 
@@ -117,7 +118,10 @@ cat release-notes.md >> CHANGELOG.md
 
 ## Automated Release Notes (AI-Enhanced)
 
-This project includes an automated workflow that generates AI-enhanced release notes using fast, free inference APIs (Cerebras or Grok).
+This project includes an automated workflow that generates AI-enhanced release notes using multiple AI providers: **OpenAI**, **Anthropic**, **Cerebras**, or **Groq**.
+
+> **📚 Want to use this in your own repository?**
+> See the **[Complete Integration Guide](docs/USAGE.md)** for step-by-step instructions on adding automated AI-enhanced release notes to any project.
 
 ### How It Works
 
@@ -125,52 +129,94 @@ When you push a version tag (e.g., `v1.0.0`), the workflow automatically:
 
 1. ✅ Builds the promptext-notes binary
 2. 🔍 Analyzes git history and extracts code context
-3. 🤖 Sends the prompt to Cerebras/Grok API for AI enhancement
+3. 🤖 Sends the prompt to your chosen AI provider for enhancement
 4. 📝 Creates a GitHub release with polished notes
 5. 📋 Updates CHANGELOG.md in the repository
 
+### Supported AI Providers
+
+| Provider | Default Model | Context Limit | Cost | Setup URL |
+|----------|---------------|---------------|------|-----------|
+| **Cerebras** | gpt-oss-120b | 65K tokens | ✅ Free | [cerebras.ai](https://cerebras.ai) |
+| **Groq** | llama-3.3-70b-versatile | 32K tokens | ✅ Free | [console.groq.com](https://console.groq.com/keys) |
+| **OpenAI** | gpt-5-nano | 272K tokens | 💰 $0.05/$0.40 per 1M | [platform.openai.com](https://platform.openai.com/api-keys) |
+| **Anthropic** | claude-haiku-4-5 | 200K tokens | 💰 $1/$5 per 1M | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
+
 ### Setup
 
-1. **Get a free API key** from [Cerebras](https://cerebras.ai) or [Grok](https://x.ai)
+1. **Get an API key** from your chosen provider (see Setup URL column above)
 
-2. **Add the API key to GitHub Secrets**:
-   - Go to your repository → Settings → Secrets and variables → Actions
-   - Add `CEREBRAS_API_KEY` or `GROK_API_KEY`
+2. **Add API key(s) to GitHub Secrets**:
+   - Go to your repository → **Settings** → **Secrets and variables** → **Actions**
+   - Click **"New repository secret"**
+   - Add one or more of these secrets:
+     - `OPENAI_API_KEY` - For OpenAI
+     - `ANTHROPIC_API_KEY` - For Anthropic
+     - `CEREBRAS_API_KEY` - For Cerebras (recommended for free tier)
+     - `GROQ_API_KEY` - For Groq
 
-3. **Push a version tag**:
+3. **(Optional) Configure models via GitHub Variables**:
+   - Go to your repository → **Settings** → **Secrets and variables** → **Actions** → **Variables** tab
+   - Add variables to customize models (otherwise defaults are used):
+     - `OPENAI_MODEL` (default: `gpt-5-nano`)
+     - `ANTHROPIC_MODEL` (default: `claude-haiku-4-5`)
+     - `CEREBRAS_MODEL` (default: `gpt-oss-120b`)
+     - `GROQ_MODEL` (default: `llama-3.3-70b-versatile`)
+
+4. **Push a version tag**:
    ```bash
    git tag v1.0.0
    git push origin v1.0.0
    ```
 
-The workflow will automatically generate and publish AI-enhanced release notes!
+The workflow will automatically generate and publish AI-enhanced release notes using Cerebras (default) or your configured provider!
 
 ### Manual Script Usage
 
 You can also use the script locally:
 
 ```bash
-# Set API key
+# Using Cerebras (default, free tier)
 export CEREBRAS_API_KEY="your-key-here"
-
-# Generate release notes
 ./scripts/generate-release-notes.sh v1.0.0
 
-# With custom previous tag and provider
-./scripts/generate-release-notes.sh v1.0.0 v0.9.0 cerebras
+# Using OpenAI
+export OPENAI_API_KEY="your-key-here"
+./scripts/generate-release-notes.sh v1.0.0 v0.9.0 openai
+
+# Using Anthropic with custom model
+export ANTHROPIC_API_KEY="your-key-here"
+./scripts/generate-release-notes.sh v1.0.0 v0.9.0 anthropic claude-sonnet-4-5
+
+# Using Groq
+export GROQ_API_KEY="your-key-here"
+./scripts/generate-release-notes.sh v1.0.0 v0.9.0 groq
 
 # Save to file
 RELEASE_NOTES_FILE=notes.md ./scripts/generate-release-notes.sh v1.0.0
 ```
 
-### Supported AI Providers
+### Available Models by Provider
 
-| Provider | Model | Context | Speed | Free Tier |
-|----------|-------|---------|-------|-----------|
-| **Cerebras** | gpt-oss-120b | 65K | ⚡ Ultra-fast | ✅ Yes (Default) |
-| **Cerebras** | llama-3.3-70b | 65K | ⚡ Ultra-fast | ✅ Yes |
-| **Cerebras** | zai-glm-4.6 | 64K | ⚡ Ultra-fast | ✅ Yes |
-| **Grok** | grok-beta | - | ⚡ Fast | ✅ Yes |
+**Cerebras** (free, ultra-fast):
+- `gpt-oss-120b` (default) - 120B params, best free quality
+- `llama-3.3-70b` - 70B params, good balance
+- `zai-glm-4.6` - Multilingual support
+
+**Groq** (free, fast):
+- `llama-3.3-70b-versatile` (default) - Best for general use
+- `mixtral-8x7b-32768` - Good for technical content
+- `llama-3.1-70b-versatile` - Alternative option
+
+**OpenAI** (paid, 2025 models):
+- `gpt-5-nano` (default) - **Most economical** ($0.05/$0.40 per 1M tokens)
+- `gpt-5-mini` - Good balance ($0.25/$2.00 per 1M tokens)
+- `gpt-5` - **Best quality** ($1.25/$10 per 1M tokens)
+
+**Anthropic** (paid, 2025 models):
+- `claude-haiku-4-5` (default) - **Best value** ($1/$5 per 1M, 73.3% SWE-bench)
+- `claude-sonnet-4-5` - **Best coding model** (frontier performance)
+- `claude-opus-4-1` - Highest reasoning capability
 
 ## CI/CD Integration
 
@@ -328,6 +374,53 @@ docs: update README examples
 
 ... (full prompt with code context)
 ```
+
+## Troubleshooting
+
+### API Key Issues
+
+**Problem**: `❌ OPENAI_API_KEY environment variable not set`
+
+**Solution**:
+- Make sure you've added the API key to GitHub Secrets (for CI) or set it as an environment variable (for local use)
+- Check the secret name matches exactly: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `CEREBRAS_API_KEY`, or `GROQ_API_KEY`
+
+### Invalid API Key
+
+**Problem**: `❌ OpenAI API Error (invalid_api_key): Invalid API key`
+
+**Solution**:
+- Verify your API key is correct and hasn't expired
+- For OpenAI/Groq: Key format is `sk-...` or similar
+- For Anthropic: Key format is `sk-ant-...`
+- For Cerebras: Check [cerebras.ai](https://cerebras.ai) for correct key format
+
+### Model Not Found
+
+**Problem**: `❌ Cerebras API Error: Model llama-3.1-70b does not exist`
+
+**Solution**:
+- Check the "Available Models by Provider" section above for valid model names
+- Update the `CEREBRAS_MODEL` GitHub Variable or use a different model in the command
+- Common mistake: `llama3.1-70b` (no dash) vs `llama-3.1-70b` (with dashes)
+
+### Context Length Exceeded
+
+**Problem**: `❌ API Error: Current length is 8950 while limit is 8192`
+
+**Solution**:
+- Your code changes are too large for the model's context window
+- Switch to a provider with a larger context limit (see "Supported AI Providers" table)
+- Recommended: Anthropic (200K), OpenAI (128K), or Cerebras (65K)
+
+### Rate Limiting
+
+**Problem**: `❌ API Error (429): Rate limit exceeded`
+
+**Solution**:
+- Wait a few minutes and try again
+- Consider upgrading to a paid tier for higher rate limits
+- Switch to a different provider (free tiers: Cerebras, Groq)
 
 ## Contributing
 
