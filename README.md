@@ -167,6 +167,7 @@ RELEASE_NOTES_FILE=notes.md ./scripts/generate-release-notes.sh v1.0.0
 
 | Provider | Model | Context | Speed | Free Tier |
 |----------|-------|---------|-------|-----------|
+| **Cerebras** | gpt-oss-120b | 65K | ⚡ Ultra-fast | ✅ Yes (Default) |
 | **Cerebras** | llama-3.3-70b | 65K | ⚡ Ultra-fast | ✅ Yes |
 | **Cerebras** | zai-glm-4.6 | 64K | ⚡ Ultra-fast | ✅ Yes |
 | **Grok** | grok-beta | - | ⚡ Fast | ✅ Yes |
