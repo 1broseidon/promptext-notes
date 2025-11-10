@@ -167,7 +167,7 @@ RELEASE_NOTES_FILE=notes.md ./scripts/generate-release-notes.sh v1.0.0
 
 | Provider | Model | Speed | Free Tier |
 |----------|-------|-------|-----------|
-| **Cerebras** | llama3.1-70b | ⚡ Ultra-fast | ✅ Yes |
+| **Cerebras** | llama3.1-8b | ⚡ Ultra-fast | ✅ Yes |
 | **Grok** | grok-beta | ⚡ Fast | ✅ Yes |
 
 ## CI/CD Integration

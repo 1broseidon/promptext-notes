@@ -50,13 +50,13 @@ call_cerebras() {
     local api_key="$1"
     local prompt="$2"
 
-    echo "🧠 Calling Cerebras API (llama3.1-70b)..." >&2
+    echo "🧠 Calling Cerebras API (llama3.1-8b)..." >&2
 
     # Create JSON payload
     local json_payload=$(jq -n \
         --arg prompt "$prompt" \
         '{
-            model: "llama3.1-70b",
+            model: "llama3.1-8b",
             stream: false,
             max_tokens: 4096,
             temperature: 0.6,
