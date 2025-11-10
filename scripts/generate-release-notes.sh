@@ -78,11 +78,26 @@ call_cerebras() {
     # Check for errors
     if echo "$response" | jq -e '.error' > /dev/null 2>&1; then
         echo "❌ API Error: $(echo "$response" | jq -r '.error.message')" >&2
+        echo "Full response: $response" >&2
+        return 1
+    fi
+
+    # Check if response is empty
+    if [ -z "$response" ]; then
+        echo "❌ Empty response from API" >&2
         return 1
     fi
 
     # Extract content
-    echo "$response" | jq -r '.choices[0].message.content // empty'
+    local content=$(echo "$response" | jq -r '.choices[0].message.content // empty')
+
+    if [ -z "$content" ]; then
+        echo "❌ No content in API response" >&2
+        echo "Full response: $response" >&2
+        return 1
+    fi
+
+    echo "$content"
 }
 
 # Function to call Grok API (xAI)
@@ -118,11 +133,26 @@ call_grok() {
     # Check for errors
     if echo "$response" | jq -e '.error' > /dev/null 2>&1; then
         echo "❌ API Error: $(echo "$response" | jq -r '.error.message')" >&2
+        echo "Full response: $response" >&2
+        return 1
+    fi
+
+    # Check if response is empty
+    if [ -z "$response" ]; then
+        echo "❌ Empty response from API" >&2
         return 1
     fi
 
     # Extract content
-    echo "$response" | jq -r '.choices[0].message.content // empty'
+    local content=$(echo "$response" | jq -r '.choices[0].message.content // empty')
+
+    if [ -z "$content" ]; then
+        echo "❌ No content in API response" >&2
+        echo "Full response: $response" >&2
+        return 1
+    fi
+
+    echo "$content"
 }
 
 # Call the appropriate API
