@@ -1,4 +1,4 @@
-module github.com/george/promptext-notes
+module github.com/1broseidon/promptext-notes
 
 go 1.24.1
 
