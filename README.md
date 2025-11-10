@@ -115,9 +115,64 @@ cat release-notes.md >> CHANGELOG.md
    - **Basic Mode**: Keep a Changelog formatted release notes
    - **AI Mode**: Comprehensive prompt with full code context for LLM enhancement
 
+## Automated Release Notes (AI-Enhanced)
+
+This project includes an automated workflow that generates AI-enhanced release notes using fast, free inference APIs (Cerebras or Grok).
+
+### How It Works
+
+When you push a version tag (e.g., `v1.0.0`), the workflow automatically:
+
+1. ✅ Builds the promptext-notes binary
+2. 🔍 Analyzes git history and extracts code context
+3. 🤖 Sends the prompt to Cerebras/Grok API for AI enhancement
+4. 📝 Creates a GitHub release with polished notes
+5. 📋 Updates CHANGELOG.md in the repository
+
+### Setup
+
+1. **Get a free API key** from [Cerebras](https://cerebras.ai) or [Grok](https://x.ai)
+
+2. **Add the API key to GitHub Secrets**:
+   - Go to your repository → Settings → Secrets and variables → Actions
+   - Add `CEREBRAS_API_KEY` or `GROK_API_KEY`
+
+3. **Push a version tag**:
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+The workflow will automatically generate and publish AI-enhanced release notes!
+
+### Manual Script Usage
+
+You can also use the script locally:
+
+```bash
+# Set API key
+export CEREBRAS_API_KEY="your-key-here"
+
+# Generate release notes
+./scripts/generate-release-notes.sh v1.0.0
+
+# With custom previous tag and provider
+./scripts/generate-release-notes.sh v1.0.0 v0.9.0 cerebras
+
+# Save to file
+RELEASE_NOTES_FILE=notes.md ./scripts/generate-release-notes.sh v1.0.0
+```
+
+### Supported AI Providers
+
+| Provider | Model | Speed | Free Tier |
+|----------|-------|-------|-----------|
+| **Cerebras** | llama3.1-70b | ⚡ Ultra-fast | ✅ Yes |
+| **Grok** | grok-beta | ⚡ Fast | ✅ Yes |
+
 ## CI/CD Integration
 
-### GitHub Actions
+### GitHub Actions (Basic)
 
 ```yaml
 - name: Generate Release Notes
@@ -130,6 +185,10 @@ cat release-notes.md >> CHANGELOG.md
   with:
     body_path: RELEASE_NOTES.md
 ```
+
+### GitHub Actions (With AI Enhancement)
+
+The repository includes a complete automated workflow. See `.github/workflows/auto-docs.yml`.
 
 ### GitLab CI
 

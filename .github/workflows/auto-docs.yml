@@ -1,0 +1,168 @@
+name: Auto-Generate Release Notes
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
+        type: string
+      since_tag:
+        description: 'Previous tag to compare from (optional)'
+        required: false
+        type: string
+      api_provider:
+        description: 'API provider to use'
+        required: true
+        type: choice
+        options:
+          - cerebras
+          - grok
+        default: cerebras
+
+jobs:
+  generate-release-notes:
+    name: Generate AI Release Notes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for git operations
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Build promptext-notes
+        run: |
+          go build -o promptext-notes ./cmd/promptext-notes
+          sudo mv promptext-notes /usr/local/bin/
+          promptext-notes --help
+
+      - name: Determine version and previous tag
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+            # Get previous tag
+            PREV_TAG=$(git describe --tags --abbrev=0 ${VERSION}^ 2>/dev/null || echo "")
+            echo "since_tag=$PREV_TAG" >> $GITHUB_OUTPUT
+          else
+            # Manual workflow dispatch
+            VERSION="${{ inputs.version }}"
+            SINCE_TAG="${{ inputs.since_tag }}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "since_tag=$SINCE_TAG" >> $GITHUB_OUTPUT
+          fi
+
+          echo "🏷️  Version: $VERSION"
+          echo "📍 Previous tag: ${SINCE_TAG:-auto-detect}"
+
+      - name: Select API provider
+        id: api
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # Use Cerebras by default for tag pushes
+            API_PROVIDER="cerebras"
+          else
+            API_PROVIDER="${{ inputs.api_provider }}"
+          fi
+          echo "provider=$API_PROVIDER" >> $GITHUB_OUTPUT
+          echo "🤖 Using API provider: $API_PROVIDER"
+
+      - name: Generate release notes with AI
+        id: generate
+        env:
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          GROK_API_KEY: ${{ secrets.GROK_API_KEY }}
+          RELEASE_NOTES_FILE: release-notes.md
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          SINCE_TAG="${{ steps.version.outputs.since_tag }}"
+          API_PROVIDER="${{ steps.api.outputs.provider }}"
+
+          # Build command
+          CMD="./scripts/generate-release-notes.sh $VERSION"
+          if [ -n "$SINCE_TAG" ]; then
+            CMD="$CMD $SINCE_TAG"
+          fi
+          CMD="$CMD $API_PROVIDER"
+
+          echo "Running: $CMD"
+          $CMD
+
+          if [ -f release-notes.md ]; then
+            echo "notes_file=release-notes.md" >> $GITHUB_OUTPUT
+            echo "✅ Release notes generated successfully"
+          else
+            echo "❌ Failed to generate release notes"
+            exit 1
+          fi
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update CHANGELOG.md
+        if: github.event_name == 'push'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Create temp file with new release notes
+          cat release-notes.md > temp-changelog.md
+          echo "" >> temp-changelog.md
+
+          # Append existing CHANGELOG if it exists
+          if [ -f CHANGELOG.md ]; then
+            cat CHANGELOG.md >> temp-changelog.md
+          fi
+
+          # Replace CHANGELOG
+          mv temp-changelog.md CHANGELOG.md
+
+          echo "📝 Updated CHANGELOG.md with release notes"
+
+      - name: Commit CHANGELOG.md
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add CHANGELOG.md
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "docs: update CHANGELOG for ${{ steps.version.outputs.version }}"
+            git push origin HEAD:main
+            echo "✅ Pushed CHANGELOG.md to main branch"
+          fi
+
+      - name: Upload release notes artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes-${{ steps.version.outputs.version }}
+          path: release-notes.md
+          retention-days: 90
