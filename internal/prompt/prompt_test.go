@@ -64,10 +64,11 @@ func TestGenerateAIPrompt(t *testing.T) {
 				"This is the code context",
 				"## Task",
 				"Generate release notes in Keep a Changelog format",
-				"## Requirements",
-				"Use the commit history and code context",
+				"## Critical Rules - MUST FOLLOW",
+				"MUST OMIT",
+				"User-facing changes ONLY",
 				"## Example Format",
-				"Please generate the complete, polished release notes now",
+				"Generate ONLY the sections with content",
 			},
 		},
 		{
@@ -119,7 +120,7 @@ func TestGenerateAIPromptStructure(t *testing.T) {
 		"## Changed Files Summary",
 		"## Code Context (via promptext)",
 		"## Task",
-		"## Requirements",
+		"## Critical Rules - MUST FOLLOW",
 		"## Example Format",
 	}
 
