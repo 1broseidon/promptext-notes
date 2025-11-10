@@ -23,6 +23,3 @@
 - **Context analyzed**: ~7708 tokens
 
 This release focuses on improving the accuracy and detail of release notes, as well as enhancing the overall user experience. The addition of automated AI-enhanced release notes generation and detailed error logging improves the quality and reliability of the release notes. The changes to the Cerebras API model and CI/CD pipeline improve the performance and efficiency of the build process.
-
-🧠 Calling Cerebras API (llama3.1-70b)...
-
