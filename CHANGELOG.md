@@ -1,3 +1,8 @@
+## [v0.4.0] - 2025-11-10
+
+### Added
+- **Enhanced AI prompt generation** – Added explicit rules to omit non‑user‑value content, new sections (BREAKING CHANGES, Deprecated, Security), and stricter categorization, improving prompt relevance and conciseness.
+
 ## [v0.3.0] - 2025-11-10  
 
 ### Added  
