@@ -14,21 +14,21 @@ SINCE_TAG="${2:-}"
 API_PROVIDER="${3:-cerebras}"  # cerebras or grok
 
 if [ -z "$VERSION" ]; then
-    echo "Usage: $0 <version> [since-tag] [api-provider]"
-    echo "Example: $0 v1.0.0"
-    echo "Example: $0 v1.0.0 v0.9.0"
-    echo "Example: $0 v1.0.0 v0.9.0 grok"
+    echo "Usage: $0 <version> [since-tag] [api-provider]" >&2
+    echo "Example: $0 v1.0.0" >&2
+    echo "Example: $0 v1.0.0 v0.9.0" >&2
+    echo "Example: $0 v1.0.0 v0.9.0 grok" >&2
     exit 1
 fi
 
 # Check if promptext-notes binary exists
 if ! command -v promptext-notes &> /dev/null; then
-    echo "❌ promptext-notes binary not found. Please install it first:"
-    echo "   go install github.com/1broseidon/promptext-notes/cmd/promptext-notes@latest"
+    echo "❌ promptext-notes binary not found. Please install it first:" >&2
+    echo "   go install github.com/1broseidon/promptext-notes/cmd/promptext-notes@latest" >&2
     exit 1
 fi
 
-echo "🤖 Generating AI prompt for $VERSION..."
+echo "🤖 Generating AI prompt for $VERSION..." >&2
 
 # Generate the AI prompt
 PROMPT_ARGS="--version $VERSION --ai-prompt"
@@ -39,18 +39,18 @@ fi
 AI_PROMPT=$(promptext-notes $PROMPT_ARGS 2>/dev/null)
 
 if [ -z "$AI_PROMPT" ]; then
-    echo "❌ Failed to generate AI prompt"
+    echo "❌ Failed to generate AI prompt" >&2
     exit 1
 fi
 
-echo "✅ AI prompt generated (~$(echo "$AI_PROMPT" | wc -c) characters)"
+echo "✅ AI prompt generated (~$(echo "$AI_PROMPT" | wc -c) characters)" >&2
 
 # Function to call Cerebras API
 call_cerebras() {
     local api_key="$1"
     local prompt="$2"
 
-    echo "🧠 Calling Cerebras API (llama3.1-70b)..."
+    echo "🧠 Calling Cerebras API (llama3.1-70b)..." >&2
 
     # Create JSON payload
     local json_payload=$(jq -n \
@@ -77,7 +77,7 @@ call_cerebras() {
 
     # Check for errors
     if echo "$response" | jq -e '.error' > /dev/null 2>&1; then
-        echo "❌ API Error: $(echo "$response" | jq -r '.error.message')"
+        echo "❌ API Error: $(echo "$response" | jq -r '.error.message')" >&2
         return 1
     fi
 
@@ -90,7 +90,7 @@ call_grok() {
     local api_key="$1"
     local prompt="$2"
 
-    echo "🧠 Calling Grok API (grok-beta)..."
+    echo "🧠 Calling Grok API (grok-beta)..." >&2
 
     # Create JSON payload
     local json_payload=$(jq -n \
@@ -117,7 +117,7 @@ call_grok() {
 
     # Check for errors
     if echo "$response" | jq -e '.error' > /dev/null 2>&1; then
-        echo "❌ API Error: $(echo "$response" | jq -r '.error.message')"
+        echo "❌ API Error: $(echo "$response" | jq -r '.error.message')" >&2
         return 1
     fi
 
@@ -130,41 +130,40 @@ RELEASE_NOTES=""
 case "$API_PROVIDER" in
     cerebras)
         if [ -z "$CEREBRAS_API_KEY" ]; then
-            echo "❌ CEREBRAS_API_KEY environment variable not set"
+            echo "❌ CEREBRAS_API_KEY environment variable not set" >&2
             exit 1
         fi
         RELEASE_NOTES=$(call_cerebras "$CEREBRAS_API_KEY" "$AI_PROMPT")
         ;;
     grok)
         if [ -z "$GROK_API_KEY" ]; then
-            echo "❌ GROK_API_KEY environment variable not set"
+            echo "❌ GROK_API_KEY environment variable not set" >&2
             exit 1
         fi
         RELEASE_NOTES=$(call_grok "$GROK_API_KEY" "$AI_PROMPT")
         ;;
     *)
-        echo "❌ Unknown API provider: $API_PROVIDER"
-        echo "Supported providers: cerebras, grok"
+        echo "❌ Unknown API provider: $API_PROVIDER" >&2
+        echo "Supported providers: cerebras, grok" >&2
         exit 1
         ;;
 esac
 
 if [ -z "$RELEASE_NOTES" ]; then
-    echo "❌ Failed to generate release notes from API"
+    echo "❌ Failed to generate release notes from API" >&2
     exit 1
 fi
 
-# Output the release notes
-echo ""
-echo "✅ Release notes generated successfully!"
-echo ""
-echo "═══════════════════════════════════════════════════════════════"
+# Output the release notes to stdout (this is what gets captured)
 echo "$RELEASE_NOTES"
-echo "═══════════════════════════════════════════════════════════════"
+
+# Status message to stderr
+echo "" >&2
+echo "✅ Release notes generated successfully!" >&2
 
 # Save to file if RELEASE_NOTES_FILE is set
 if [ -n "$RELEASE_NOTES_FILE" ]; then
     echo "$RELEASE_NOTES" > "$RELEASE_NOTES_FILE"
-    echo ""
-    echo "📝 Saved to: $RELEASE_NOTES_FILE"
+    echo "" >&2
+    echo "📝 Saved to: $RELEASE_NOTES_FILE" >&2
 fi
