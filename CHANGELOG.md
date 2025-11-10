@@ -6,21 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [v0.5.0] - 2025-11-10
-
-### Added
-- **Multi-provider AI support** - Generate AI-enhanced release notes using OpenAI, Anthropic, Cerebras, or Groq with configurable models and automatic provider selection.
-- **Comprehensive integration guide** - New `docs/USAGE.md` with step-by-step setup instructions for adding automated release notes to any repository.
-- **GitHub Actions workflow** - Automated release notes generation on tag push with support for multiple AI providers and GitHub release creation.
-- **Local generation script** - `scripts/generate-release-notes.sh` for generating AI-enhanced notes locally with provider selection and custom model configuration.
-
-### Changed
-- **Default AI provider** - Switched to Anthropic Claude Haiku 4.5 as the default provider for better reliability and cost-effectiveness.
-- **Model selection** - Updated to latest 2025 models across all providers (GPT-5 for OpenAI, Claude Haiku 4.5 for Anthropic, gpt-oss-120b for Cerebras, Llama 3.3-70b for Groq).
-- **Documentation** - Expanded README with detailed provider comparison table, model availability, setup instructions, and troubleshooting guides for API key and rate limit issues.
-
----
-
 ## [v0.4.0] - 2025-11-10
 
 ### Added
