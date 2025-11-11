@@ -33,13 +33,12 @@ func GenerateAIPrompt(version, fromTag string, commits []string, categories anal
 	prompt.WriteString(fmt.Sprintf("- **Context extracted**: ~%d tokens\n\n",
 		result.TokenCount))
 
-	// Commit history
-	prompt.WriteString("## Commit History\n\n")
+	// Full code context - MOST IMPORTANT
+	prompt.WriteString("## Code Context (via promptext)\n\n")
+	prompt.WriteString("**IMPORTANT**: This is the actual code that changed. Use this as your PRIMARY source for understanding what changed, not just the commit messages below.\n\n")
 	prompt.WriteString("```\n")
-	for _, commit := range commits {
-		prompt.WriteString(commit + "\n")
-	}
-	prompt.WriteString("```\n\n")
+	prompt.WriteString(result.FormattedOutput)
+	prompt.WriteString("\n```\n\n")
 
 	// Changed files summary
 	prompt.WriteString("## Changed Files Summary\n\n")
@@ -49,11 +48,14 @@ func GenerateAIPrompt(version, fromTag string, commits []string, categories anal
 	}
 	prompt.WriteString("\n")
 
-	// Full code context
-	prompt.WriteString("## Code Context (via promptext)\n\n")
+	// Commit history - REFERENCE ONLY
+	prompt.WriteString("## Commit History (Reference Only)\n\n")
+	prompt.WriteString("**NOTE**: Commit messages may be incomplete or misleading. Rely on the actual code changes above to understand the true nature of changes.\n\n")
 	prompt.WriteString("```\n")
-	prompt.WriteString(result.FormattedOutput)
-	prompt.WriteString("\n```\n\n")
+	for _, commit := range commits {
+		prompt.WriteString(commit + "\n")
+	}
+	prompt.WriteString("```\n\n")
 
 	// Task instructions
 	prompt.WriteString("## Task\n\n")
@@ -93,6 +95,11 @@ func GenerateAIPrompt(version, fromTag string, commits []string, categories anal
 
 	// Requirements
 	prompt.WriteString("## Critical Rules - MUST FOLLOW\n\n")
+	prompt.WriteString("**ANALYSIS METHODOLOGY**:\n")
+	prompt.WriteString("- 🔍 **PRIMARY**: Analyze the actual CODE CHANGES in the \"Code Context\" section above\n")
+	prompt.WriteString("- 📝 **SECONDARY**: Use commit messages as hints ONLY, but verify against actual code\n")
+	prompt.WriteString("- 🎯 **GOAL**: Describe what the code ACTUALLY does, not what commit messages claim\n")
+	prompt.WriteString("- ⚡ **EXAMPLE**: If commit says \"add feature X\" but code shows \"fix bug in Y\", write about the bug fix\n\n")
 	prompt.WriteString("**MUST OMIT** (these provide ZERO user value):\n")
 	prompt.WriteString("- ❌ Documentation updates (README changes, CHANGELOG meta-references)\n")
 	prompt.WriteString("- ❌ Internal refactoring or code reorganization\n")

@@ -15,7 +15,7 @@ ai:
   # Cerebras: llama-3.3-70b, gpt-oss-120b, zai-glm-4.6
   # Groq: llama-3.3-70b-versatile, mixtral-8x7b-32768
   # Ollama: llama3.2, codellama, etc. (models you have pulled locally)
-  model: gpt-oss-120b
+  model: zai-glm-4.6
 
   # Environment variable containing API key
   # Set to empty string for Ollama (no API key needed)

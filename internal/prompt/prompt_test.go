@@ -116,9 +116,9 @@ func TestGenerateAIPromptStructure(t *testing.T) {
 	sections := []string{
 		"# Release Notes Enhancement Request",
 		"## Context",
-		"## Commit History",
-		"## Changed Files Summary",
 		"## Code Context (via promptext)",
+		"## Changed Files Summary",
+		"## Commit History",
 		"## Task",
 		"## Critical Rules - MUST FOLLOW",
 		"## Example Format",
