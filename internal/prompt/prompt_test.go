@@ -53,6 +53,7 @@ func TestGenerateAIPrompt(t *testing.T) {
 				"**Commits analyzed**: 3",
 				"**Files changed**: 2",
 				"**Context extracted**: ~5000 tokens",
+				"## 🎯 Executive Summary",
 				"## Commit History",
 				"feat: add new feature",
 				"fix: resolve bug",
@@ -64,9 +65,9 @@ func TestGenerateAIPrompt(t *testing.T) {
 				"This is the code context",
 				"## Task",
 				"Generate release notes in Keep a Changelog format",
-				"## Critical Rules - MUST FOLLOW",
-				"MUST OMIT",
-				"User-facing changes ONLY",
+				"## Critical Rules",
+				"PRIMARY SOURCE",
+				"USER VALUE ONLY",
 				"## Example Format",
 				"Generate ONLY the sections with content",
 			},
@@ -85,7 +86,7 @@ func TestGenerateAIPrompt(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := GenerateAIPrompt(tt.version, tt.fromTag, tt.commits, categories, result)
+			got := GenerateAIPrompt(tt.version, tt.fromTag, tt.commits, categories, result, "", "")
 
 			// Check that all expected parts are present
 			for _, part := range tt.wantParts {
@@ -110,17 +111,19 @@ func TestGenerateAIPromptStructure(t *testing.T) {
 		},
 	}
 
-	prompt := GenerateAIPrompt("v1.0.0", "v0.9.0", commits, categories, result)
+	prompt := GenerateAIPrompt("v1.0.0", "v0.9.0", commits, categories, result, "", "")
 
 	// Verify all major sections are present in order
 	sections := []string{
 		"# Release Notes Enhancement Request",
 		"## Context",
+		"## 🎯 Executive Summary",
+		"## 📊 Git Diff Summary",
 		"## Code Context (via promptext)",
 		"## Changed Files Summary",
 		"## Commit History",
 		"## Task",
-		"## Critical Rules - MUST FOLLOW",
+		"## Critical Rules",
 		"## Example Format",
 	}
 
@@ -149,7 +152,7 @@ func TestGenerateAIPromptCodeBlocks(t *testing.T) {
 		},
 	}
 
-	prompt := GenerateAIPrompt("v1.0.0", "v0.9.0", commits, categories, result)
+	prompt := GenerateAIPrompt("v1.0.0", "v0.9.0", commits, categories, result, "", "")
 
 	// Count code blocks (should have at least 3: commit history, code context, example)
 	codeBlockCount := strings.Count(prompt, "```")
@@ -174,7 +177,7 @@ func TestGenerateAIPromptEmptyCommits(t *testing.T) {
 		},
 	}
 
-	prompt := GenerateAIPrompt("v1.0.0", "v0.9.0", commits, categories, result)
+	prompt := GenerateAIPrompt("v1.0.0", "v0.9.0", commits, categories, result, "", "")
 
 	// Should still have the structure
 	if !strings.Contains(prompt, "# Release Notes Enhancement Request") {

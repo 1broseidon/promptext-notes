@@ -62,3 +62,24 @@ func IsGitRepository() bool {
 	err := cmd.Run()
 	return err == nil
 }
+
+// GetDiffStats returns git diff --stat output between the given tag/commit and HEAD.
+func GetDiffStats(since string) (string, error) {
+	cmd := exec.Command("git", "diff", "--stat", since+"..HEAD")
+	output, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("failed to get diff stats: %w", err)
+	}
+	return strings.TrimSpace(string(output)), nil
+}
+
+// GetDiff returns git diff output between the given tag/commit and HEAD.
+// Use --unified=3 for standard context.
+func GetDiff(since string) (string, error) {
+	cmd := exec.Command("git", "diff", "--unified=3", since+"..HEAD")
+	output, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("failed to get diff: %w", err)
+	}
+	return strings.TrimSpace(string(output)), nil
+}

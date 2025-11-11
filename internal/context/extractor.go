@@ -12,9 +12,15 @@ func ExtractCodeContext(changedFiles []string) (*promptext.Result, error) {
 	// Focus on code and documentation files
 	relevantExts := []string{".go", ".md", ".yml", ".yaml"}
 
-	// Filter changed files by extension
+	// Filter changed files by extension and exclude meta files
 	var relevantFiles []string
 	for _, file := range changedFiles {
+		// Skip CHANGELOG and README - these are meta-documentation that pollute context
+		base := filepath.Base(file)
+		if base == "CHANGELOG.md" || base == "README.md" {
+			continue
+		}
+
 		ext := filepath.Ext(file)
 		for _, relevantExt := range relevantExts {
 			if ext == relevantExt {

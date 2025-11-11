@@ -10,7 +10,7 @@ import (
 )
 
 // GenerateAIPrompt generates a comprehensive prompt for LLMs to write polished release notes.
-func GenerateAIPrompt(version, fromTag string, commits []string, categories analyzer.CommitCategories, result *promptext.Result) string {
+func GenerateAIPrompt(version, fromTag string, commits []string, categories analyzer.CommitCategories, result *promptext.Result, diffStats, diff string) string {
 	var prompt strings.Builder
 
 	// Determine version
@@ -33,9 +33,85 @@ func GenerateAIPrompt(version, fromTag string, commits []string, categories anal
 	prompt.WriteString(fmt.Sprintf("- **Context extracted**: ~%d tokens\n\n",
 		result.TokenCount))
 
-	// Full code context - MOST IMPORTANT
-	prompt.WriteString("## Code Context (via promptext)\n\n")
-	prompt.WriteString("**IMPORTANT**: This is the actual code that changed. Use this as your PRIMARY source for understanding what changed, not just the commit messages below.\n\n")
+	// IMPROVEMENT #1: Executive Summary
+	prompt.WriteString("## 🎯 Executive Summary\n\n")
+	prompt.WriteString("**Quick Overview**: Read this section first to understand what changed at a high level.\n\n")
+
+	// Determine change type based on categories
+	changeTypes := []string{}
+	if len(categories.Breaking) > 0 {
+		changeTypes = append(changeTypes, "breaking changes")
+	}
+	if len(categories.Features) > 0 {
+		changeTypes = append(changeTypes, "new features")
+	}
+	if len(categories.Fixes) > 0 {
+		changeTypes = append(changeTypes, "bug fixes")
+	}
+	if len(categories.Changes) > 0 {
+		changeTypes = append(changeTypes, "improvements")
+	}
+
+	changeTypeStr := "miscellaneous updates"
+	if len(changeTypes) > 0 {
+		changeTypeStr = strings.Join(changeTypes, ", ")
+	}
+
+	prompt.WriteString(fmt.Sprintf("- **Change Type**: %s\n", changeTypeStr))
+	prompt.WriteString(fmt.Sprintf("- **Files Modified**: %d files changed\n", len(result.ProjectOutput.Files)))
+
+	// List key files (top 3 by token count)
+	if len(result.ProjectOutput.Files) > 0 {
+		prompt.WriteString("- **Key Files**: ")
+		numFiles := len(result.ProjectOutput.Files)
+		if numFiles > 3 {
+			numFiles = 3
+		}
+		for i := 0; i < numFiles; i++ {
+			if i > 0 {
+				prompt.WriteString(", ")
+			}
+			prompt.WriteString("`" + result.ProjectOutput.Files[i].Path + "`")
+		}
+		prompt.WriteString("\n")
+	}
+
+	prompt.WriteString(fmt.Sprintf("- **Commit Count**: %d commit(s)\n", len(commits)))
+	prompt.WriteString("\n")
+	prompt.WriteString("**Focus Areas**: Analyze the diff below as your PRIMARY source of truth.\n\n")
+
+	// IMPROVEMENT #2: Git Diff Stats and Diff View - NOW MANDATORY AND FIRST
+	prompt.WriteString("## 📊 Git Diff Summary (PRIMARY SOURCE)\n\n")
+	prompt.WriteString("**CRITICAL**: This is your PRIMARY source. The diff shows EXACTLY what changed line-by-line.\n\n")
+
+	if diffStats != "" {
+		prompt.WriteString("### Change Magnitude\n\n")
+		prompt.WriteString("```\n")
+		prompt.WriteString(diffStats)
+		prompt.WriteString("\n```\n\n")
+	}
+
+	// Special handling for CHANGELOG-only changes
+	if strings.Contains(diffStats, "CHANGELOG.md") && !strings.Contains(diffStats, ".go") && !strings.Contains(diffStats, ".yml") {
+		prompt.WriteString("⚠️ **WARNING**: Only CHANGELOG.md changed. This means:\n")
+		prompt.WriteString("- No actual code changes for users\n")
+		prompt.WriteString("- This is likely an automated documentation update\n")
+		prompt.WriteString("- Correct response: \"No user-facing changes in this version\"\n\n")
+	}
+
+	// Add full diff for small changes (< 200 lines)
+	diffLines := strings.Count(diff, "\n")
+	if diff != "" && diffLines > 0 {
+		prompt.WriteString("### Detailed Line-by-Line Diff\n\n")
+		prompt.WriteString("**Use this as ground truth**: Every + is an addition, every - is a deletion.\n\n")
+		prompt.WriteString("```diff\n")
+		prompt.WriteString(diff)
+		prompt.WriteString("\n```\n\n")
+	}
+
+	// Full code context - SECONDARY SOURCE
+	prompt.WriteString("## Code Context (via promptext) - SECONDARY SOURCE\n\n")
+	prompt.WriteString("**Note**: This shows full file contents for context. The DIFF above is more accurate for what actually changed.\n\n")
 	prompt.WriteString("```\n")
 	prompt.WriteString(result.FormattedOutput)
 	prompt.WriteString("\n```\n\n")
@@ -93,40 +169,16 @@ func GenerateAIPrompt(version, fromTag string, commits []string, categories anal
 	prompt.WriteString("- Security improvements or vulnerability fixes\n")
 	prompt.WriteString("- Be specific but don't reveal exploits\n\n")
 
-	// Requirements
-	prompt.WriteString("## Critical Rules - MUST FOLLOW\n\n")
-	prompt.WriteString("**ANALYSIS METHODOLOGY**:\n")
-	prompt.WriteString("- 🔍 **PRIMARY**: Analyze the actual CODE CHANGES in the \"Code Context\" section above\n")
-	prompt.WriteString("- 📝 **SECONDARY**: Use commit messages as hints ONLY, but verify against actual code\n")
-	prompt.WriteString("- 🎯 **GOAL**: Describe what the code ACTUALLY does, not what commit messages claim\n")
-	prompt.WriteString("- ⚡ **EXAMPLE**: If commit says \"add feature X\" but code shows \"fix bug in Y\", write about the bug fix\n\n")
-	prompt.WriteString("**MUST OMIT** (these provide ZERO user value):\n")
-	prompt.WriteString("- ❌ Documentation updates (README changes, CHANGELOG meta-references)\n")
-	prompt.WriteString("- ❌ Internal refactoring or code reorganization\n")
-	prompt.WriteString("- ❌ Test coverage, CI/CD, or build system changes\n")
-	prompt.WriteString("- ❌ Implementation details (token budgets, internal APIs, data structures)\n")
-	prompt.WriteString("- ❌ Statistics sections (file counts, commit counts, token counts)\n")
-	prompt.WriteString("- ❌ Empty sections with placeholders like \"*(No fixes)*\"\n")
-	prompt.WriteString("- ❌ Meta-references (\"Updated CHANGELOG\", \"Added release notes\")\n\n")
-
-	prompt.WriteString("**MUST FOCUS ON**:\n")
-	prompt.WriteString("- ✅ User-facing changes ONLY\n")
-	prompt.WriteString("- ✅ What users can do differently\n")
-	prompt.WriteString("- ✅ Problems users will no longer experience\n")
-	prompt.WriteString("- ✅ Features users need to know about\n")
-	prompt.WriteString("- ✅ Breaking changes that require action\n\n")
-
-	prompt.WriteString("**LENGTH LIMITS**:\n")
-	prompt.WriteString("- Maximum 2 sentences per item\n")
-	prompt.WriteString("- Maximum 3 sub-points per item if needed\n")
-	prompt.WriteString("- Be concise and direct - no fluff\n\n")
-
-	prompt.WriteString("**CATEGORIZATION RULES**:\n")
-	prompt.WriteString("- \"Added\" = Truly NEW features users didn't have before\n")
-	prompt.WriteString("- \"Changed\" = IMPROVEMENTS to existing features\n")
-	prompt.WriteString("- \"Fixed\" = BUG FIXES that resolve user problems\n")
-	prompt.WriteString("- Do NOT list the same change in multiple sections\n")
-	prompt.WriteString("- Model upgrades go in \"Changed\", not \"Added\"\n\n")
+	// IMPROVEMENT #3: Consolidated Requirements
+	prompt.WriteString("## Critical Rules\n\n")
+	prompt.WriteString("**PRIMARY SOURCE**: Code changes (diff/context above), NOT commit messages\n\n")
+	prompt.WriteString("**USER VALUE ONLY**: Omit internal changes (refactoring, tests, CI/CD, docs, meta-references)\n\n")
+	prompt.WriteString("**FORMAT**: 1-2 sentences max | Omit empty sections | No placeholders\n\n")
+	prompt.WriteString("**CATEGORIES**:\n")
+	prompt.WriteString("- Added = NEW capabilities users didn't have\n")
+	prompt.WriteString("- Changed = IMPROVEMENTS to existing features\n")
+	prompt.WriteString("- Fixed = BUG FIXES solving user problems\n")
+	prompt.WriteString("- Breaking = Changes requiring user action\n\n")
 
 	// Example format
 	prompt.WriteString("## Example Format\n\n")

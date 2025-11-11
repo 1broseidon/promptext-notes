@@ -24,37 +24,71 @@ type GenerateOptions struct {
 	Verbose      bool
 }
 
+// gitData holds git-related data for release notes
+type gitData struct {
+	changedFiles []string
+	commits      []string
+	diffStats    string
+	diff         string
+}
+
+// fetchGitData retrieves all git-related information needed for release notes
+func fetchGitData(sinceTag string, verbose bool) (*gitData, error) {
+	data := &gitData{}
+	var err error
+
+	// Get changed files
+	data.changedFiles, err = git.GetChangedFiles(sinceTag)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get changed files: %w", err)
+	}
+
+	if len(data.changedFiles) == 0 {
+		if verbose {
+			fmt.Fprintln(os.Stderr, "⚠️  No changes detected")
+		}
+		return nil, fmt.Errorf("no changes detected since %s", sinceTag)
+	}
+
+	if verbose {
+		fmt.Fprintf(os.Stderr, "   Found %d changed files\n", len(data.changedFiles))
+	}
+
+	// Get commits
+	data.commits, err = git.GetCommits(sinceTag)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get commits: %w", err)
+	}
+
+	if verbose {
+		fmt.Fprintf(os.Stderr, "   Found %d commits\n", len(data.commits))
+	}
+
+	// Get git diff stats (non-fatal)
+	data.diffStats, err = git.GetDiffStats(sinceTag)
+	if err != nil && verbose {
+		fmt.Fprintf(os.Stderr, "   Warning: could not get diff stats: %v\n", err)
+	}
+
+	// Get git diff (non-fatal)
+	data.diff, err = git.GetDiff(sinceTag)
+	if err != nil && verbose {
+		fmt.Fprintf(os.Stderr, "   Warning: could not get diff: %v\n", err)
+	}
+
+	return data, nil
+}
+
 // GenerateReleaseNotes orchestrates the full release notes generation process
 func GenerateReleaseNotes(ctx context.Context, opts GenerateOptions, provider ai.Provider) (string, error) {
 	if opts.Verbose {
 		fmt.Fprintf(os.Stderr, "📊 Analyzing changes since %s...\n", opts.SinceTag)
 	}
 
-	// Get changed files
-	changedFiles, err := git.GetChangedFiles(opts.SinceTag)
+	// Fetch all git data
+	gitData, err := fetchGitData(opts.SinceTag, opts.Verbose)
 	if err != nil {
-		return "", fmt.Errorf("failed to get changed files: %w", err)
-	}
-
-	if len(changedFiles) == 0 {
-		if opts.Verbose {
-			fmt.Fprintln(os.Stderr, "⚠️  No changes detected")
-		}
-		return "", fmt.Errorf("no changes detected since %s", opts.SinceTag)
-	}
-
-	if opts.Verbose {
-		fmt.Fprintf(os.Stderr, "   Found %d changed files\n", len(changedFiles))
-	}
-
-	// Get commits
-	commits, err := git.GetCommits(opts.SinceTag)
-	if err != nil {
-		return "", fmt.Errorf("failed to get commits: %w", err)
-	}
-
-	if opts.Verbose {
-		fmt.Fprintf(os.Stderr, "   Found %d commits\n", len(commits))
+		return "", err
 	}
 
 	// Extract code context
@@ -62,7 +96,7 @@ func GenerateReleaseNotes(ctx context.Context, opts GenerateOptions, provider ai
 		fmt.Fprintln(os.Stderr, "\n🔍 Extracting code context with promptext...")
 	}
 
-	result, err := aicontext.ExtractCodeContext(changedFiles)
+	result, err := aicontext.ExtractCodeContext(gitData.changedFiles)
 	if err != nil {
 		return "", fmt.Errorf("failed to extract context: %w", err)
 	}
@@ -73,10 +107,11 @@ func GenerateReleaseNotes(ctx context.Context, opts GenerateOptions, provider ai
 	}
 
 	// Categorize commits
-	categories := analyzer.CategorizeCommits(commits)
+	categories := analyzer.CategorizeCommits(gitData.commits)
 
 	// Generate AI prompt
-	promptText := prompt.GenerateAIPrompt(opts.Version, opts.SinceTag, commits, categories, result)
+	promptText := prompt.GenerateAIPrompt(opts.Version, opts.SinceTag, gitData.commits,
+		categories, result, gitData.diffStats, gitData.diff)
 
 	// If only prompt is requested, return it
 	if opts.AIPromptOnly {
@@ -88,30 +123,10 @@ func GenerateReleaseNotes(ctx context.Context, opts GenerateOptions, provider ai
 
 	// If AI enhancement is requested, call the AI provider
 	if opts.UseAI && provider != nil {
-		if opts.Verbose {
-			fmt.Fprintf(os.Stderr, "\n🤖 Generating AI-enhanced changelog using %s...\n", provider.Name())
-		}
-
-		// Create AI request using provider's configured defaults
-		req := provider.NewRequest(promptText)
-
-		// Call AI provider
-		response, err := provider.Generate(ctx, req)
+		content, err := generateAIContent(ctx, provider, promptText, opts.Verbose)
 		if err != nil {
-			return "", fmt.Errorf("failed to generate AI response: %w", err)
+			return "", err
 		}
-
-		if opts.Verbose {
-			fmt.Fprintf(os.Stderr, "   ✓ Generated %d tokens", response.TokensUsed)
-			if response.CostEstimate > 0 {
-				fmt.Fprintf(os.Stderr, " (estimated cost: $%.4f)", response.CostEstimate)
-			}
-			fmt.Fprintln(os.Stderr)
-		}
-
-		// Post-process the AI response to remove any extra headers
-		content := stripAIHeaders(response.Content)
-
 		return content, nil
 	}
 
@@ -121,6 +136,33 @@ func GenerateReleaseNotes(ctx context.Context, opts GenerateOptions, provider ai
 	}
 
 	return generator.GenerateReleaseNotes(opts.Version, categories, result), nil
+}
+
+// generateAIContent calls the AI provider and processes the response
+func generateAIContent(ctx context.Context, provider ai.Provider, promptText string, verbose bool) (string, error) {
+	if verbose {
+		fmt.Fprintf(os.Stderr, "\n🤖 Generating AI-enhanced changelog using %s...\n", provider.Name())
+	}
+
+	// Create AI request using provider's configured defaults
+	req := provider.NewRequest(promptText)
+
+	// Call AI provider
+	response, err := provider.Generate(ctx, req)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate AI response: %w", err)
+	}
+
+	if verbose {
+		fmt.Fprintf(os.Stderr, "   ✓ Generated %d tokens", response.TokensUsed)
+		if response.CostEstimate > 0 {
+			fmt.Fprintf(os.Stderr, " (estimated cost: $%.4f)", response.CostEstimate)
+		}
+		fmt.Fprintln(os.Stderr)
+	}
+
+	// Post-process the AI response to remove any extra headers
+	return stripAIHeaders(response.Content), nil
 }
 
 // stripAIHeaders removes common AI-generated headers from the response
