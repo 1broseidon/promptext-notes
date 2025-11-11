@@ -42,6 +42,8 @@ func main() {
 	// Override config with CLI flags
 	if *providerFlag != "" {
 		cfg.AI.Provider = *providerFlag
+		// Update API key env var to match the new provider
+		cfg.AI.APIKeyEnv = config.GetDefaultAPIKeyEnv(*providerFlag)
 	}
 	if *modelFlag != "" {
 		cfg.AI.Model = *modelFlag

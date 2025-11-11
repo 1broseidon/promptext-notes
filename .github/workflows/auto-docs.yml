@@ -76,8 +76,8 @@ jobs:
         id: api
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
-            # Use Cerebras by default for tag pushes
-            API_PROVIDER="cerebras"
+            # Use Anthropic by default for tag pushes (Cerebras API key invalid)
+            API_PROVIDER="anthropic"
           else
             API_PROVIDER="${{ inputs.api_provider }}"
           fi

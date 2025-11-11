@@ -211,8 +211,8 @@ func applyDefaults(config *Config) {
 	}
 }
 
-// getDefaultAPIKeyEnv returns the default environment variable for API key
-func getDefaultAPIKeyEnv(provider string) string {
+// GetDefaultAPIKeyEnv returns the default environment variable for API key
+func GetDefaultAPIKeyEnv(provider string) string {
 	switch provider {
 	case "anthropic":
 		return "ANTHROPIC_API_KEY"
@@ -227,6 +227,11 @@ func getDefaultAPIKeyEnv(provider string) string {
 	default:
 		return ""
 	}
+}
+
+// getDefaultAPIKeyEnv is a private wrapper for backwards compatibility
+func getDefaultAPIKeyEnv(provider string) string {
+	return GetDefaultAPIKeyEnv(provider)
 }
 
 // getDefaultModel returns the default model for a provider
