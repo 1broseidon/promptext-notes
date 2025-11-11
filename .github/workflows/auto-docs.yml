@@ -161,6 +161,31 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
 
+          # Check if this version already exists in CHANGELOG
+          if [ -f CHANGELOG.md ] && grep -q "^## \[$VERSION\]" CHANGELOG.md; then
+            echo "⚠️  Version $VERSION already exists in CHANGELOG.md"
+            echo "   Removing old entry and replacing with new one..."
+
+            # Create a temporary file excluding the existing version section
+            awk -v ver="$VERSION" '
+              /^## \[/ {
+                in_section = 0
+                if ($0 ~ "^## \\[" ver "\\]") {
+                  in_section = 1
+                  next
+                }
+              }
+              /^---$/ && in_section {
+                in_section = 0
+                next
+              }
+              !in_section { print }
+            ' CHANGELOG.md > CHANGELOG-filtered.md
+
+            # Use filtered version as base
+            mv CHANGELOG-filtered.md CHANGELOG.md
+          fi
+
           # Strip the "# Release Notes for vX.X.X" header if present
           # Keep only from "## [vX.X.X]" onwards
           if grep -q "^# Release Notes for" release-notes.md; then
