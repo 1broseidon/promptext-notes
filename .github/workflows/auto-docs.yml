@@ -76,8 +76,8 @@ jobs:
         id: api
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
-            # Use Cerebras by default for tag pushes
-            API_PROVIDER="cerebras"
+            # Use Groq by default for tag pushes
+            API_PROVIDER="groq"
           else
             API_PROVIDER="${{ inputs.api_provider }}"
           fi
@@ -113,7 +113,7 @@ jobs:
               ;;
             groq)
               MODEL="${{ vars.GROQ_MODEL }}"
-              MODEL="${MODEL:-llama-3.3-70b-versatile}"
+              MODEL="${MODEL:-moonshotai/kimi-k2-instruct-0905}"
               ;;
             *)
               MODEL=""
