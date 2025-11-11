@@ -161,17 +161,17 @@ jobs:
           fi
 
           # Add header at the top
-          cat > CHANGELOG.md << 'EOF'
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
-
----
-
-EOF
-          cat temp-changelog.md >> CHANGELOG.md
+          {
+            echo "# Changelog"
+            echo ""
+            echo "All notable changes to this project will be documented in this file."
+            echo ""
+            echo "The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)."
+            echo ""
+            echo "---"
+            echo ""
+            cat temp-changelog.md
+          } > CHANGELOG.md
 
           # Cleanup
           rm -f release-notes-clean.md temp-changelog.md
