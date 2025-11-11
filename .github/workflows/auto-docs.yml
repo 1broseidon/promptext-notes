@@ -37,38 +37,19 @@ jobs:
         with:
           fetch-depth: 0  # Full history for git operations
 
-      - name: Check for existing release
-        id: check-release
-        run: |
-          if gh release view --repo 1broseidon/promptext-notes $(gh release list --repo 1broseidon/promptext-notes --limit 1 --json tagName --jq '.[0].tagName') &>/dev/null; then
-            echo "has_release=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_release=false" >> $GITHUB_OUTPUT
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
-
-      - name: Set up Go (fallback for first release)
-        if: steps.check-release.outputs.has_release != 'true'
+      - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.22'
+          cache: true
 
-      - name: Download or build promptext-notes
+      - name: Install promptext-notes from source
         run: |
-          # Try to download the latest release binary (much faster)
-          if gh release download --repo 1broseidon/promptext-notes --pattern 'promptext-notes-linux-amd64' --output promptext-notes 2>/dev/null; then
-            echo "✅ Downloaded pre-built binary from latest release"
-            chmod +x promptext-notes
-          else
-            echo "⚠️  No previous release found, building from source..."
-            go build -o promptext-notes ./cmd/promptext-notes
-          fi
-          sudo mv promptext-notes /usr/local/bin/
+          # Install directly from the repo (fast due to Go module cache)
+          go install ./cmd/promptext-notes
+          # Make it available in PATH
+          echo "$HOME/go/bin" >> $GITHUB_PATH
           promptext-notes --help
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Determine version and previous tag
         id: version
