@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.5.1] - 2025-11-11
+
+### Fixed
+- **YAML workflow syntax** - Corrected heredoc syntax in GitHub Actions workflow to properly handle multi-line strings
+
+---
+
+---
+
 ## [v0.4.0] - 2025-11-10
 
 ### Added
