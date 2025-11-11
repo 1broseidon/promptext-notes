@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.5.0] - 2025-11-11
+
+### Added
+- **Multi-provider AI support** - Generate release notes using OpenAI, Anthropic, Cerebras, or Groq with configurable models and automatic provider selection
+- **GitHub Actions automation** - Automated workflow that generates AI-enhanced release notes on version tag push with full GitHub release integration
+- **Local script generation** - `generate-release-notes.sh` script for generating AI-enhanced notes locally with support for all AI providers
+- **Configurable AI models** - GitHub Variables support for customizing which AI model each provider uses (e.g., `OPENAI_MODEL`, `CEREBRAS_MODEL`)
+
+### Changed
+- **AI model upgrade** - Switched default AI model to gpt-oss-120b for significantly better quality and more coherent release notes generation
+- **Enhanced prompt rules** - Improved AI prompts with explicit rules to omit non-user-value content and stricter categorization for better relevance
+
+### Fixed
+- **YAML workflow syntax** - Corrected heredoc syntax in GitHub Actions workflow to properly handle multi-line strings
+- **Duplicate headers** - Prevented duplicate section headers in CHANGELOG output
+
+---
 
 ---
 
