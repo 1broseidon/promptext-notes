@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.7.1] - 2025-11-11
+
+### ⚠️ BREAKING CHANGES
+- **Model configuration now requires exact API names** - Remove any custom model name mappings from your configuration and use the exact model identifiers from your AI provider's API documentation (e.g., `claude-haiku-4-5` for Anthropic, `gpt-4o-mini` for OpenAI).
+
+### Changed
+- **Faster release notes generation** - Optimized workflow now downloads pre-built binaries instead of building from source, reducing generation time from ~45-50s to ~10-15s.
+- **Improved code quality checks** - Added gocyclo complexity analysis to pre-commit hooks to catch overly complex functions early in development.
+
+### Fixed
+- **Error message capitalization** - Corrected inconsistent capitalization in error strings for better readability and consistency.
+---
+
 ## [v0.7.0] - 2025-11-11
 
 ### Added
