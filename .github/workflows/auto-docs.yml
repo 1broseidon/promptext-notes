@@ -109,7 +109,7 @@ jobs:
               ;;
             cerebras)
               MODEL="${{ vars.CEREBRAS_MODEL }}"
-              MODEL="${MODEL:-zai-glm-4.6}"
+              MODEL="${MODEL:-gpt-oss-120b}"
               ;;
             groq)
               MODEL="${{ vars.GROQ_MODEL }}"

@@ -189,7 +189,7 @@ When you push a version tag (e.g., `v1.0.0`), the workflow automatically:
 | Provider | Default Model | Context Limit | Cost | Setup URL |
 |----------|---------------|---------------|------|-----------|
 | **Ollama** 🆕 | llama3.2 | Varies | ✅ Free (Local) | [ollama.com](https://ollama.com) |
-| **Cerebras** | zai-glm-4.6 | 65K tokens | ✅ Free | [cerebras.ai](https://cerebras.ai) |
+| **Cerebras** | gpt-oss-120b | 65K tokens | ✅ Free | [cerebras.ai](https://cerebras.ai) |
 | **Groq** | llama-3.3-70b-versatile | 32K tokens | ✅ Free | [console.groq.com](https://console.groq.com/keys) |
 | **OpenAI** | gpt-4o-mini | 128K tokens | 💰 $0.15/$0.60 per 1M | [platform.openai.com](https://platform.openai.com/api-keys) |
 | **Anthropic** | claude-haiku-4-5 | 200K tokens | 💰 $0.80/$4.00 per 1M | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
