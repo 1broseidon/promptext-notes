@@ -234,12 +234,19 @@ func (p *AnthropicProvider) generateOnce(ctx context.Context, req *Request) (*Re
 func (p *AnthropicProvider) normalizeModel(model string) string {
 	// Map friendly names to API model names
 	modelMap := map[string]string{
-		"claude-haiku-4-5":  "claude-3-5-haiku-20241022",
-		"claude-sonnet-4-5": "claude-3-5-sonnet-20241022",
+		// Claude 4.x models (2025)
+		"claude-haiku-4-5":  "claude-haiku-4-5",  // Latest Haiku 4.5 (March 2025)
+		"claude-sonnet-4-5": "claude-sonnet-4-5", // Sonnet 4.5
 		"claude-opus-4":     "claude-opus-4-20250514",
-		"haiku":             "claude-3-5-haiku-20241022",
-		"sonnet":            "claude-3-5-sonnet-20241022",
-		"opus":              "claude-opus-4-20250514",
+
+		// Claude 3.5 models (2024)
+		"claude-3-5-haiku":  "claude-3-5-haiku-20241022",
+		"claude-3-5-sonnet": "claude-3-5-sonnet-20241022",
+
+		// Short aliases
+		"haiku":  "claude-haiku-4-5",              // Default to latest Haiku
+		"sonnet": "claude-sonnet-4-5",             // Default to latest Sonnet
+		"opus":   "claude-opus-4-20250514",
 	}
 
 	if normalized, ok := modelMap[model]; ok {
