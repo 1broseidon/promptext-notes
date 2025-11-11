@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.7.2] - 2025-11-11
+
+### ⚠️ BREAKING CHANGES
+- **Default provider changed** - Cerebras with zai-glm-4.6 model is now the default instead of Anthropic. Set `CEREBRAS_API_KEY` environment variable or override provider via CLI flags.
+
+### Changed
+- **Default AI provider** - Switched from Anthropic to Cerebras with zai-glm-4.6 model for improved performance and cost-effectiveness.
+- **Provider override behavior** - API key environment variable now automatically updates when overriding provider via CLI flags.
+
+### Fixed
+- **API key environment mismatch** - Fixed issue where overriding provider via CLI didn't update the corresponding API key environment variable.
+- **Cerebras error handling** - Improved error messages for better debugging when Cerebras API requests fail.
+- **CHANGELOG duplicate entries** - Added detection to prevent duplicate version entries when updating changelog.
+---
+
 ## [v0.7.1] - 2025-11-11
 
 ### ⚠️ BREAKING CHANGES
