@@ -13,25 +13,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **GitHub Actions automation** - Automated workflow that generates AI-enhanced release notes on version tag push with full GitHub release integration
 - **Local script generation** - `generate-release-notes.sh` script for generating AI-enhanced notes locally with support for all AI providers
 - **Configurable AI models** - GitHub Variables support for customizing which AI model each provider uses (e.g., `OPENAI_MODEL`, `CEREBRAS_MODEL`)
+- **Comprehensive documentation** - New `docs/USAGE.md` with step-by-step integration guide for external repositories
 
 ### Changed
-- **AI model upgrade** - Switched default AI model to gpt-oss-120b for significantly better quality and more coherent release notes generation
+- **Default AI provider** - Switched to Anthropic Claude Haiku 4.5 for better reliability and cost-effectiveness ($1/$5 per 1M tokens)
+- **Model updates** - Updated to latest 2025 models (GPT-5 Nano for OpenAI, Claude Haiku 4.5 for Anthropic)
 - **Enhanced prompt rules** - Improved AI prompts with explicit rules to omit non-user-value content and stricter categorization for better relevance
 
 ### Fixed
 - **YAML workflow syntax** - Corrected heredoc syntax in GitHub Actions workflow to properly handle multi-line strings
 - **Duplicate headers** - Prevented duplicate section headers in CHANGELOG output
-
----
-
----
-
-## [v0.5.1] - 2025-11-11
-
-### Fixed
-- **YAML workflow syntax** - Corrected heredoc syntax in GitHub Actions workflow to properly handle multi-line strings
-
----
 
 ---
 
