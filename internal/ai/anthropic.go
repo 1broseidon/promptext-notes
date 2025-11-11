@@ -70,7 +70,7 @@ type anthropicError struct {
 // NewAnthropicProvider creates a new Anthropic provider
 func NewAnthropicProvider(apiKey string, cfg *config.Config) (*AnthropicProvider, error) {
 	if apiKey == "" {
-		return nil, fmt.Errorf("Anthropic API key is required")
+		return nil, fmt.Errorf("anthropic API key is required")
 	}
 
 	return &AnthropicProvider{
@@ -90,11 +90,11 @@ func (p *AnthropicProvider) Name() string {
 // ValidateConfig checks if the configuration is valid
 func (p *AnthropicProvider) ValidateConfig() error {
 	if p.apiKey == "" {
-		return fmt.Errorf("Anthropic API key is not set")
+		return fmt.Errorf("anthropic API key is not set")
 	}
 
 	if p.config.AI.Model == "" {
-		return fmt.Errorf("Anthropic model is not specified")
+		return fmt.Errorf("anthropic model is not specified")
 	}
 
 	return nil
@@ -193,7 +193,7 @@ func (p *AnthropicProvider) generateOnce(ctx context.Context, req *Request) (*Re
 		if err := json.Unmarshal(body, &apiErr); err != nil {
 			return nil, fmt.Errorf("API error (status %d): %s", httpResp.StatusCode, string(body))
 		}
-		return nil, fmt.Errorf("Anthropic API error: %s", apiErr.Error.Message)
+		return nil, fmt.Errorf("anthropic API error: %s", apiErr.Error.Message)
 	}
 
 	// Parse response

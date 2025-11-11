@@ -71,7 +71,7 @@ type openaiError struct {
 // NewOpenAIProvider creates a new OpenAI provider
 func NewOpenAIProvider(apiKey string, cfg *config.Config) (*OpenAIProvider, error) {
 	if apiKey == "" {
-		return nil, fmt.Errorf("OpenAI API key is required")
+		return nil, fmt.Errorf("openAI API key is required")
 	}
 
 	return &OpenAIProvider{
@@ -91,11 +91,11 @@ func (p *OpenAIProvider) Name() string {
 // ValidateConfig checks if the configuration is valid
 func (p *OpenAIProvider) ValidateConfig() error {
 	if p.apiKey == "" {
-		return fmt.Errorf("OpenAI API key is not set")
+		return fmt.Errorf("openAI API key is not set")
 	}
 
 	if p.config.AI.Model == "" {
-		return fmt.Errorf("OpenAI model is not specified")
+		return fmt.Errorf("openAI model is not specified")
 	}
 
 	return nil

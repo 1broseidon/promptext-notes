@@ -23,7 +23,7 @@ type CerebrasProvider struct {
 // NewCerebrasProvider creates a new Cerebras provider
 func NewCerebrasProvider(apiKey string, cfg *config.Config) (*CerebrasProvider, error) {
 	if apiKey == "" {
-		return nil, fmt.Errorf("Cerebras API key is required")
+		return nil, fmt.Errorf("cerebras API key is required")
 	}
 
 	return &CerebrasProvider{
@@ -43,11 +43,11 @@ func (p *CerebrasProvider) Name() string {
 // ValidateConfig checks if the configuration is valid
 func (p *CerebrasProvider) ValidateConfig() error {
 	if p.apiKey == "" {
-		return fmt.Errorf("Cerebras API key is not set")
+		return fmt.Errorf("cerebras API key is not set")
 	}
 
 	if p.config.AI.Model == "" {
-		return fmt.Errorf("Cerebras model is not specified")
+		return fmt.Errorf("cerebras model is not specified")
 	}
 
 	return nil
@@ -147,7 +147,7 @@ func (p *CerebrasProvider) generateOnce(ctx context.Context, req *Request) (*Res
 		if err := json.Unmarshal(body, &apiErr); err != nil {
 			return nil, fmt.Errorf("API error (status %d): %s", httpResp.StatusCode, string(body))
 		}
-		return nil, fmt.Errorf("Cerebras API error: %s", apiErr.Error.Message)
+		return nil, fmt.Errorf("cerebras API error: %s", apiErr.Error.Message)
 	}
 
 	// Parse response (OpenAI-compatible format)

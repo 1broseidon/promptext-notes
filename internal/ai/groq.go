@@ -23,7 +23,7 @@ type GroqProvider struct {
 // NewGroqProvider creates a new Groq provider
 func NewGroqProvider(apiKey string, cfg *config.Config) (*GroqProvider, error) {
 	if apiKey == "" {
-		return nil, fmt.Errorf("Groq API key is required")
+		return nil, fmt.Errorf("groq API key is required")
 	}
 
 	return &GroqProvider{
@@ -43,11 +43,11 @@ func (p *GroqProvider) Name() string {
 // ValidateConfig checks if the configuration is valid
 func (p *GroqProvider) ValidateConfig() error {
 	if p.apiKey == "" {
-		return fmt.Errorf("Groq API key is not set")
+		return fmt.Errorf("groq API key is not set")
 	}
 
 	if p.config.AI.Model == "" {
-		return fmt.Errorf("Groq model is not specified")
+		return fmt.Errorf("groq model is not specified")
 	}
 
 	return nil
@@ -147,7 +147,7 @@ func (p *GroqProvider) generateOnce(ctx context.Context, req *Request) (*Respons
 		if err := json.Unmarshal(body, &apiErr); err != nil {
 			return nil, fmt.Errorf("API error (status %d): %s", httpResp.StatusCode, string(body))
 		}
-		return nil, fmt.Errorf("Groq API error: %s", apiErr.Error.Message)
+		return nil, fmt.Errorf("groq API error: %s", apiErr.Error.Message)
 	}
 
 	// Parse response (OpenAI-compatible format)

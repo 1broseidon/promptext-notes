@@ -58,7 +58,7 @@ func (p *OllamaProvider) Name() string {
 // ValidateConfig checks if the configuration is valid
 func (p *OllamaProvider) ValidateConfig() error {
 	if p.config.AI.Model == "" {
-		return fmt.Errorf("Ollama model is not specified")
+		return fmt.Errorf("ollama model is not specified")
 	}
 
 	return nil
@@ -142,7 +142,7 @@ func (p *OllamaProvider) generateOnce(ctx context.Context, req *Request) (*Respo
 
 	// Handle non-200 responses
 	if httpResp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Ollama API error (status %d): %s", httpResp.StatusCode, string(body))
+		return nil, fmt.Errorf("ollama API error (status %d): %s", httpResp.StatusCode, string(body))
 	}
 
 	// Parse response

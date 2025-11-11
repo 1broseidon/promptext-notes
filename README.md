@@ -320,6 +320,21 @@ release:
 
 - Go 1.22 or higher
 - Git
+- [staticcheck](https://staticcheck.dev/) (optional but recommended): `go install honnef.co/go/tools/cmd/staticcheck@latest`
+
+### Setup Pre-commit Hooks
+
+Install Git hooks to automatically run quality checks before each commit:
+
+```bash
+./scripts/install-hooks.sh
+```
+
+This will run `go fmt`, `go vet`, `staticcheck`, and tests before allowing commits. To skip hooks for a specific commit:
+
+```bash
+git commit --no-verify
+```
 
 ### Build
 
