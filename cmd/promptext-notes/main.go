@@ -1,16 +1,16 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 
-	"github.com/1broseidon/promptext-notes/internal/analyzer"
-	"github.com/1broseidon/promptext-notes/internal/context"
-	"github.com/1broseidon/promptext-notes/internal/generator"
+	"github.com/1broseidon/promptext-notes/internal/ai"
+	"github.com/1broseidon/promptext-notes/internal/config"
 	"github.com/1broseidon/promptext-notes/internal/git"
-	"github.com/1broseidon/promptext-notes/internal/prompt"
+	"github.com/1broseidon/promptext-notes/internal/workflow"
 )
 
 func main() {
@@ -18,12 +18,38 @@ func main() {
 	version := flag.String("version", "", "Version to generate notes for (e.g., v0.7.4)")
 	sinceTag := flag.String("since", "", "Generate notes since this tag (auto-detects if empty)")
 	output := flag.String("output", "", "Output file (prints to stdout if empty)")
-	aiPrompt := flag.Bool("ai-prompt", false, "Generate prompt for AI to enhance release notes")
+	configFile := flag.String("config", ".promptext-notes.yml", "Configuration file path")
+
+	// AI flags
+	generate := flag.Bool("generate", false, "Generate AI-enhanced changelog (requires AI provider)")
+	aiPrompt := flag.Bool("ai-prompt", false, "Generate prompt for AI to enhance release notes (legacy mode)")
+	providerFlag := flag.String("provider", "", "AI provider (anthropic, openai, cerebras, groq, ollama)")
+	modelFlag := flag.String("model", "", "AI model to use")
+
+	// Other flags
+	quiet := flag.Bool("quiet", false, "Suppress progress messages")
+
 	flag.Parse()
 
 	// Check if we're in a git repository
 	if !git.IsGitRepository() {
 		log.Fatal("Error: Not a git repository. Please run this command from within a git repository.")
+	}
+
+	// Load configuration
+	cfg := config.LoadOrDefault(*configFile)
+
+	// Override config with CLI flags
+	if *providerFlag != "" {
+		cfg.AI.Provider = *providerFlag
+	}
+	if *modelFlag != "" {
+		cfg.AI.Model = *modelFlag
+	}
+
+	// Validate configuration
+	if err := cfg.Validate(); err != nil {
+		log.Fatalf("Invalid configuration: %v", err)
 	}
 
 	// Get from tag
@@ -36,50 +62,35 @@ func main() {
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, "📊 Analyzing changes since %s...\n", fromTag)
+	// Create AI provider if needed
+	var provider ai.Provider
+	var err error
 
-	// Get changed files
-	changedFiles, err := git.GetChangedFiles(fromTag)
+	if *generate {
+		provider, err = ai.NewProvider(cfg)
+		if err != nil {
+			log.Fatalf("Failed to create AI provider: %v", err)
+		}
+	}
+
+	// Set up workflow options
+	opts := workflow.GenerateOptions{
+		Version:      *version,
+		SinceTag:     fromTag,
+		Output:       *output,
+		UseAI:        *generate,
+		AIPromptOnly: *aiPrompt,
+		Verbose:      !*quiet,
+	}
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.AI.Timeout*2)
+	defer cancel()
+
+	// Generate release notes
+	outputText, err := workflow.GenerateReleaseNotes(ctx, opts, provider)
 	if err != nil {
-		log.Fatalf("Failed to get changed files: %v", err)
-	}
-
-	if len(changedFiles) == 0 {
-		fmt.Fprintln(os.Stderr, "⚠️  No changes detected")
-		return
-	}
-
-	fmt.Fprintf(os.Stderr, "   Found %d changed files\n", len(changedFiles))
-
-	// Get commits
-	commits, err := git.GetCommits(fromTag)
-	if err != nil {
-		log.Fatalf("Failed to get commits: %v", err)
-	}
-
-	fmt.Fprintf(os.Stderr, "   Found %d commits\n", len(commits))
-
-	// Extract code context
-	fmt.Fprintln(os.Stderr, "\n🔍 Extracting code context with promptext...")
-	result, err := context.ExtractCodeContext(changedFiles)
-	if err != nil {
-		log.Fatalf("Failed to extract context: %v", err)
-	}
-
-	fmt.Fprintf(os.Stderr, "   Extracted context: ~%d tokens from %d files\n",
-		result.TokenCount, len(result.ProjectOutput.Files))
-
-	// Categorize commits
-	categories := analyzer.CategorizeCommits(commits)
-
-	// Generate output
-	var outputText string
-	if *aiPrompt {
-		fmt.Fprintln(os.Stderr, "\n📝 Generating AI prompt...")
-		outputText = prompt.GenerateAIPrompt(*version, fromTag, commits, categories, result)
-	} else {
-		fmt.Fprintln(os.Stderr, "\n📝 Generating release notes...")
-		outputText = generator.GenerateReleaseNotes(*version, categories, result)
+		log.Fatalf("Failed to generate release notes: %v", err)
 	}
 
 	// Write output
@@ -87,7 +98,9 @@ func main() {
 		if err := os.WriteFile(*output, []byte(outputText), 0644); err != nil {
 			log.Fatalf("Failed to write output: %v", err)
 		}
-		fmt.Fprintf(os.Stderr, "✅ Written to %s\n", *output)
+		if !*quiet {
+			fmt.Fprintf(os.Stderr, "✅ Written to %s\n", *output)
+		}
 	} else {
 		fmt.Print(outputText)
 	}

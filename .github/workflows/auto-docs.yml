@@ -19,11 +19,11 @@ on:
         required: true
         type: choice
         options:
+          - anthropic
           - cerebras
           - openai
-          - anthropic
           - groq
-        default: cerebras
+        default: anthropic
 
 jobs:
   generate-release-notes:
@@ -41,11 +41,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.22'
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
 
       - name: Build promptext-notes
         run: |
@@ -94,25 +89,44 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          # Model Configuration (from GitHub Variables)
-          OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-5-nano' }}
-          ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL || 'claude-haiku-4-5' }}
-          CEREBRAS_MODEL: ${{ vars.CEREBRAS_MODEL || 'gpt-oss-120b' }}
-          GROQ_MODEL: ${{ vars.GROQ_MODEL || 'llama-3.3-70b-versatile' }}
-          RELEASE_NOTES_FILE: release-notes.md
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           SINCE_TAG="${{ steps.version.outputs.since_tag }}"
           API_PROVIDER="${{ steps.api.outputs.provider }}"
 
-          # Build command
-          CMD="./scripts/generate-release-notes.sh $VERSION"
-          if [ -n "$SINCE_TAG" ]; then
-            CMD="$CMD $SINCE_TAG"
-          fi
-          CMD="$CMD $API_PROVIDER"
+          # Determine model based on provider (use GitHub Variables or defaults)
+          case "$API_PROVIDER" in
+            openai)
+              MODEL="${{ vars.OPENAI_MODEL || 'gpt-4o-mini' }}"
+              ;;
+            anthropic)
+              MODEL="${{ vars.ANTHROPIC_MODEL || 'claude-haiku-4-5' }}"
+              ;;
+            cerebras)
+              MODEL="${{ vars.CEREBRAS_MODEL || 'llama-3.3-70b' }}"
+              ;;
+            groq)
+              MODEL="${{ vars.GROQ_MODEL || 'llama-3.3-70b-versatile' }}"
+              ;;
+            *)
+              MODEL=""
+              ;;
+          esac
 
-          echo "Running: $CMD"
+          # Build command with new integrated method
+          CMD="promptext-notes --generate --provider $API_PROVIDER --output release-notes.md --version $VERSION"
+
+          # Add model flag if set
+          if [ -n "$MODEL" ]; then
+            CMD="$CMD --model $MODEL"
+          fi
+
+          # Add since tag if available
+          if [ -n "$SINCE_TAG" ]; then
+            CMD="$CMD --since $SINCE_TAG"
+          fi
+
+          echo "🚀 Running: $CMD"
           $CMD
 
           if [ -f release-notes.md ]; then

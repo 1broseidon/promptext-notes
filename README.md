@@ -11,10 +11,13 @@ A Go-based CLI tool that generates intelligent, context-aware release notes by c
 - 📊 **Git History Analysis**: Automatically analyzes commits since the last tag
 - 🔍 **Code Context Extraction**: Uses promptext to extract relevant code changes with token-aware analysis
 - 📝 **Conventional Commits**: Categorizes changes by type (feat, fix, docs, breaking, etc.)
-- 🤖 **AI-Ready Prompts**: Generates comprehensive prompts for LLMs to write polished release notes
+- 🤖 **Integrated AI Generation**: **NEW!** Generate AI-enhanced changelogs directly with `--generate` flag
+- 🌐 **Multi-Provider Support**: Works with Anthropic, OpenAI, Cerebras, Groq, and local Ollama models
+- ⚙️ **YAML Configuration**: Customize behavior with `.promptext-notes.yml` config file
 - 📋 **Keep a Changelog Format**: Produces standardized markdown output
 - ⚡ **Fast & Lightweight**: Single binary with no runtime dependencies (except Git)
 - 🔌 **Easy Integration**: Add to any repository with GitHub Actions ([See Guide](docs/USAGE.md))
+- 🆓 **Free Options**: Use Cerebras, Groq, or local Ollama (no API cost)
 
 ## Installation
 
@@ -65,15 +68,31 @@ Output:
 - **Context analyzed**: ~7,850 tokens
 ```
 
-### AI-Enhanced Release Notes
+### AI-Enhanced Release Notes (Integrated)
 
-Generate a comprehensive prompt for an LLM:
+**NEW!** Generate AI-enhanced changelog directly with a single command:
+
+```bash
+# Using Anthropic (default with config file)
+export ANTHROPIC_API_KEY="your-key-here"
+promptext-notes --generate --version v1.0.0
+
+# Or specify provider inline
+promptext-notes --generate --provider openai --model gpt-4o-mini --version v1.0.0
+```
+
+The `--generate` flag will:
+1. Analyze git history and extract code context
+2. Send the comprehensive prompt to your AI provider
+3. Return polished, production-ready release notes
+
+**Legacy Method:** Generate a prompt to paste into an LLM manually:
 
 ```bash
 promptext-notes --version v1.0.0 --ai-prompt > prompt.txt
 ```
 
-Then paste the contents of `prompt.txt` into Claude, ChatGPT, or your preferred LLM to get polished, detailed release notes.
+Then paste the contents of `prompt.txt` into Claude, ChatGPT, or your preferred LLM.
 
 ### Custom Date Range
 
@@ -98,6 +117,33 @@ promptext-notes --version v1.0.0 --output release-notes.md
 cat release-notes.md >> CHANGELOG.md
 ```
 
+## Configuration
+
+You can configure promptext-notes using a YAML configuration file. Copy `.promptext-notes.example.yml` to `.promptext-notes.yml` and customize:
+
+```yaml
+version: "1"
+
+ai:
+  provider: anthropic      # anthropic, openai, cerebras, groq, ollama
+  model: claude-haiku-4-5
+  api_key_env: ANTHROPIC_API_KEY
+  max_tokens: 8000
+  temperature: 0.3
+  timeout: 30s
+
+output:
+  format: keepachangelog
+  sections: [breaking, added, changed, fixed, docs]
+
+filters:
+  files:
+    include: ["*.go", "*.md", "*.yml"]
+    exclude: ["*_test.go", "vendor/*"]
+```
+
+See `.promptext-notes.example.yml` for full configuration options.
+
 ## Flags
 
 | Flag | Type | Default | Description |
@@ -105,7 +151,12 @@ cat release-notes.md >> CHANGELOG.md
 | `--version` | string | "" | Version to generate notes for (e.g., v0.7.4) |
 | `--since` | string | "" | Generate notes since this tag (auto-detects if empty) |
 | `--output` | string | "" | Output file path (stdout if empty) |
-| `--ai-prompt` | bool | false | Generate AI enhancement prompt instead of basic notes |
+| `--generate` | bool | false | **NEW!** Generate AI-enhanced changelog directly |
+| `--provider` | string | "" | AI provider (anthropic, openai, cerebras, groq, ollama) |
+| `--model` | string | "" | AI model to use (overrides config) |
+| `--config` | string | ".promptext-notes.yml" | Configuration file path |
+| `--quiet` | bool | false | Suppress progress messages |
+| `--ai-prompt` | bool | false | Generate AI prompt only (legacy mode) |
 
 ## How It Works
 
@@ -137,10 +188,11 @@ When you push a version tag (e.g., `v1.0.0`), the workflow automatically:
 
 | Provider | Default Model | Context Limit | Cost | Setup URL |
 |----------|---------------|---------------|------|-----------|
-| **Cerebras** | gpt-oss-120b | 65K tokens | ✅ Free | [cerebras.ai](https://cerebras.ai) |
+| **Ollama** 🆕 | llama3.2 | Varies | ✅ Free (Local) | [ollama.com](https://ollama.com) |
+| **Cerebras** | llama-3.3-70b | 65K tokens | ✅ Free | [cerebras.ai](https://cerebras.ai) |
 | **Groq** | llama-3.3-70b-versatile | 32K tokens | ✅ Free | [console.groq.com](https://console.groq.com/keys) |
-| **OpenAI** | gpt-5-nano | 272K tokens | 💰 $0.05/$0.40 per 1M | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Anthropic** | claude-haiku-4-5 | 200K tokens | 💰 $1/$5 per 1M | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
+| **OpenAI** | gpt-4o-mini | 128K tokens | 💰 $0.15/$0.60 per 1M | [platform.openai.com](https://platform.openai.com/api-keys) |
+| **Anthropic** | claude-haiku-4-5 | 200K tokens | 💰 $0.80/$4.00 per 1M | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
 
 ### Setup
 
@@ -171,29 +223,44 @@ When you push a version tag (e.g., `v1.0.0`), the workflow automatically:
 
 The workflow will automatically generate and publish AI-enhanced release notes using Cerebras (default) or your configured provider!
 
-### Manual Script Usage
+### Local CLI Usage (Recommended)
 
-You can also use the script locally:
+**NEW!** Use the integrated `--generate` flag for one-command AI-enhanced changelogs:
 
 ```bash
-# Using Cerebras (default, free tier)
+# Using Anthropic (create .promptext-notes.yml config first)
+export ANTHROPIC_API_KEY="your-key-here"
+promptext-notes --generate --version v1.0.0
+
+# Or specify provider inline
+export OPENAI_API_KEY="your-key-here"
+promptext-notes --generate --provider openai --model gpt-4o-mini --version v1.0.0
+
+# Using Ollama (local, free, no API key needed!)
+# First: ollama pull llama3.2
+promptext-notes --generate --provider ollama --model llama3.2 --version v1.0.0
+
+# Using Cerebras (free tier)
+export CEREBRAS_API_KEY="your-key-here"
+promptext-notes --generate --provider cerebras --version v1.0.0 --output CHANGELOG.md
+
+# Using Groq (free tier)
+export GROQ_API_KEY="your-key-here"
+promptext-notes --generate --provider groq --version v1.0.0
+```
+
+### Legacy Script Method
+
+You can also use the shell script (will be deprecated in future versions):
+
+```bash
+# Using Cerebras
 export CEREBRAS_API_KEY="your-key-here"
 ./scripts/generate-release-notes.sh v1.0.0
 
 # Using OpenAI
 export OPENAI_API_KEY="your-key-here"
 ./scripts/generate-release-notes.sh v1.0.0 v0.9.0 openai
-
-# Using Anthropic with custom model
-export ANTHROPIC_API_KEY="your-key-here"
-./scripts/generate-release-notes.sh v1.0.0 v0.9.0 anthropic claude-sonnet-4-5
-
-# Using Groq
-export GROQ_API_KEY="your-key-here"
-./scripts/generate-release-notes.sh v1.0.0 v0.9.0 groq
-
-# Save to file
-RELEASE_NOTES_FILE=notes.md ./scripts/generate-release-notes.sh v1.0.0
 ```
 
 ### Available Models by Provider
@@ -295,27 +362,44 @@ go vet ./...
 ```
 promptext-notes/
 ├── cmd/
-│   └── promptext-notes/     # CLI entry point
+│   └── promptext-notes/           # CLI entry point
 │       └── main.go
 ├── internal/
-│   ├── analyzer/            # Commit categorization
+│   ├── ai/                        # AI provider integrations (NEW!)
+│   │   ├── provider.go            # Provider interface
+│   │   ├── anthropic.go           # Anthropic (Claude)
+│   │   ├── openai.go              # OpenAI (GPT)
+│   │   ├── cerebras.go            # Cerebras (free)
+│   │   ├── groq.go                # Groq (free)
+│   │   ├── ollama.go              # Local Ollama
+│   │   └── retry.go               # Retry logic
+│   ├── config/                    # Configuration (NEW!)
+│   │   ├── config.go              # YAML config support
+│   │   └── config_test.go
+│   ├── workflow/                  # Orchestration (NEW!)
+│   │   └── workflow.go            # End-to-end workflow
+│   ├── analyzer/                  # Commit categorization
 │   │   ├── analyzer.go
 │   │   └── analyzer_test.go
-│   ├── context/             # Code context extraction
+│   ├── context/                   # Code context extraction
 │   │   ├── extractor.go
 │   │   └── extractor_test.go
-│   ├── generator/           # Release notes generation
+│   ├── generator/                 # Release notes generation
 │   │   ├── generator.go
 │   │   └── generator_test.go
-│   ├── git/                 # Git operations
+│   ├── git/                       # Git operations
 │   │   ├── git.go
 │   │   └── git_test.go
-│   └── prompt/              # AI prompt generation
+│   └── prompt/                    # AI prompt generation
 │       ├── prompt.go
 │       └── prompt_test.go
 ├── .github/
 │   └── workflows/
-│       └── ci.yml           # CI/CD pipeline
+│       ├── ci.yml                 # CI/CD pipeline
+│       └── auto-docs.yml          # Automated release notes
+├── scripts/
+│   └── generate-release-notes.sh  # Shell script (legacy)
+├── .promptext-notes.example.yml   # Example config (NEW!)
 ├── go.mod
 ├── go.sum
 ├── README.md
