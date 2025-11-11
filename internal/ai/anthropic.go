@@ -23,11 +23,11 @@ type AnthropicProvider struct {
 
 // anthropicRequest represents the Anthropic API request format
 type anthropicRequest struct {
-	Model       string              `json:"model"`
-	MaxTokens   int                 `json:"max_tokens"`
-	Temperature float64             `json:"temperature,omitempty"`
-	Messages    []anthropicMessage  `json:"messages"`
-	System      string              `json:"system,omitempty"`
+	Model       string             `json:"model"`
+	MaxTokens   int                `json:"max_tokens"`
+	Temperature float64            `json:"temperature,omitempty"`
+	Messages    []anthropicMessage `json:"messages"`
+	System      string             `json:"system,omitempty"`
 }
 
 // anthropicMessage represents a message in the conversation
@@ -38,12 +38,12 @@ type anthropicMessage struct {
 
 // anthropicResponse represents the Anthropic API response format
 type anthropicResponse struct {
-	ID      string              `json:"id"`
-	Type    string              `json:"type"`
-	Role    string              `json:"role"`
-	Content []anthropicContent  `json:"content"`
-	Model   string              `json:"model"`
-	Usage   anthropicUsage      `json:"usage"`
+	ID      string             `json:"id"`
+	Type    string             `json:"type"`
+	Role    string             `json:"role"`
+	Content []anthropicContent `json:"content"`
+	Model   string             `json:"model"`
+	Usage   anthropicUsage     `json:"usage"`
 }
 
 // anthropicContent represents content blocks in the response

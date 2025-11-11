@@ -16,12 +16,12 @@ import (
 
 // GenerateOptions contains options for release notes generation
 type GenerateOptions struct {
-	Version    string
-	SinceTag   string
-	Output     string
-	UseAI      bool
+	Version      string
+	SinceTag     string
+	Output       string
+	UseAI        bool
 	AIPromptOnly bool
-	Verbose    bool
+	Verbose      bool
 }
 
 // GenerateReleaseNotes orchestrates the full release notes generation process
@@ -139,9 +139,9 @@ func stripAIHeaders(content string) string {
 
 		// Skip lines that look like AI headers
 		if strings.HasPrefix(trimmed, "# Release Notes for") ||
-		   strings.HasPrefix(trimmed, "# Changelog for") ||
-		   strings.HasPrefix(trimmed, "Here are the") ||
-		   strings.HasPrefix(trimmed, "Here is the") {
+			strings.HasPrefix(trimmed, "# Changelog for") ||
+			strings.HasPrefix(trimmed, "Here are the") ||
+			strings.HasPrefix(trimmed, "Here is the") {
 			skipNext = true
 			continue
 		}

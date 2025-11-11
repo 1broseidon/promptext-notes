@@ -10,9 +10,9 @@ import (
 
 // Config represents the complete configuration for promptext-notes
 type Config struct {
-	Version string       `yaml:"version"`
-	AI      AIConfig     `yaml:"ai"`
-	Output  OutputConfig `yaml:"output"`
+	Version string        `yaml:"version"`
+	AI      AIConfig      `yaml:"ai"`
+	Output  OutputConfig  `yaml:"output"`
 	Filters FiltersConfig `yaml:"filters"`
 }
 
