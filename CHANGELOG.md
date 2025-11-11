@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.7.2] - 2025-11-11
+
+### Changed
+- **Default AI provider** - Switched to Cerebras with `zai-glm-4.6` model for improved performance and cost-effectiveness.
+- **Cerebras model default** - Updated default Cerebras model to `gpt-oss-120b` for better quality release notes generation.
+
+### Fixed
+- **CLI provider override** - Fixed 401 authentication errors when overriding the AI provider via `--provider` flag by automatically updating the corresponding API key environment variable.
+- **Error messages** - Improved Cerebras error messages for better clarity and debugging.
+- **CHANGELOG duplicates** - Added duplicate detection to prevent duplicate entries when updating the CHANGELOG.
+---
+
 ## [v0.7.1] - 2025-11-11
 
 ### ⚠️ BREAKING CHANGES
