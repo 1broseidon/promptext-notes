@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.7.0] - 2025-11-11
+
+### Added
+- **Multi-provider AI support** - Generate release notes using Anthropic, OpenAI, Cerebras, Groq, or local Ollama with configurable models and automatic provider selection.
+- **Comprehensive configuration system** - YAML-based configuration with sensible defaults, CLI flag overrides, and support for all AI providers with customizable retry strategies.
+- **Retry mechanism with backoff strategies** - Configurable retry logic with exponential, linear, or constant backoff to handle transient AI provider failures gracefully.
+
+### Changed
+- **Default AI provider** - Switched to Anthropic Claude Haiku 4.5 for improved reliability and cost-effectiveness ($1/$5 per 1M tokens).
+- **Model configuration** - Updated to latest 2025 models with provider-specific defaults (Claude Haiku 4.5 for Anthropic, GPT-4o-mini for OpenAI, Llama 3.3-70b for Cerebras/Groq).
+
+### Fixed
+- **Model name mapping** - Corrected Claude Haiku model identifier to use proper `claude-haiku-4-5` name without incorrect mappings.
+- **Model parameter passing** - Ensured AI model is properly passed from configuration to all AI provider requests.
+---
+
 ## [v0.5.0] - 2025-11-11
 
 ### Added
