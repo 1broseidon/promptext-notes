@@ -147,6 +147,9 @@ func (p *CerebrasProvider) generateOnce(ctx context.Context, req *Request) (*Res
 		if err := json.Unmarshal(body, &apiErr); err != nil {
 			return nil, fmt.Errorf("API error (status %d): %s", httpResp.StatusCode, string(body))
 		}
+		if apiErr.Error.Message == "" {
+			return nil, fmt.Errorf("cerebras API error (status %d): %s", httpResp.StatusCode, string(body))
+		}
 		return nil, fmt.Errorf("cerebras API error: %s", apiErr.Error.Message)
 	}
 
