@@ -134,12 +134,9 @@ func (p *AnthropicProvider) Generate(ctx context.Context, req *Request) (*Respon
 
 // generateOnce performs a single generation attempt
 func (p *AnthropicProvider) generateOnce(ctx context.Context, req *Request) (*Response, error) {
-	// Normalize model name
-	model := p.normalizeModel(req.Model)
-
-	// Build request payload
+	// Build request payload (model name passed through as-is from config)
 	apiReq := anthropicRequest{
-		Model:       model,
+		Model:       req.Model,
 		MaxTokens:   req.MaxTokens,
 		Temperature: req.Temperature,
 		Messages: []anthropicMessage{
@@ -214,7 +211,7 @@ func (p *AnthropicProvider) generateOnce(ctx context.Context, req *Request) (*Re
 	}
 
 	// Calculate cost estimate (approximate pricing as of 2024)
-	costEstimate := p.estimateCost(model, apiResp.Usage.InputTokens, apiResp.Usage.OutputTokens)
+	costEstimate := p.estimateCost(apiResp.Model, apiResp.Usage.InputTokens, apiResp.Usage.OutputTokens)
 
 	return &Response{
 		Content:      content.String(),
@@ -228,33 +225,6 @@ func (p *AnthropicProvider) generateOnce(ctx context.Context, req *Request) (*Re
 			"id":            apiResp.ID,
 		},
 	}, nil
-}
-
-// normalizeModel converts common model names to Anthropic's format
-func (p *AnthropicProvider) normalizeModel(model string) string {
-	// Map friendly names to API model names
-	modelMap := map[string]string{
-		// Claude 4.x models (2025)
-		"claude-haiku-4-5":  "claude-haiku-4-5",  // Latest Haiku 4.5 (March 2025)
-		"claude-sonnet-4-5": "claude-sonnet-4-5", // Sonnet 4.5
-		"claude-opus-4":     "claude-opus-4-20250514",
-
-		// Claude 3.5 models (2024)
-		"claude-3-5-haiku":  "claude-3-5-haiku-20241022",
-		"claude-3-5-sonnet": "claude-3-5-sonnet-20241022",
-
-		// Short aliases
-		"haiku":  "claude-haiku-4-5",              // Default to latest Haiku
-		"sonnet": "claude-sonnet-4-5",             // Default to latest Sonnet
-		"opus":   "claude-opus-4-20250514",
-	}
-
-	if normalized, ok := modelMap[model]; ok {
-		return normalized
-	}
-
-	// Return as-is if not in the map (assume it's already a valid model ID)
-	return model
 }
 
 // estimateCost calculates approximate cost based on token usage

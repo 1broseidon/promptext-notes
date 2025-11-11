@@ -8,12 +8,13 @@ ai:
   # Provider to use: anthropic, openai, cerebras, groq, ollama
   provider: anthropic
 
-  # Model to use (provider-specific)
-  # Anthropic: claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4
+  # Model to use (exact API model name - no aliases)
+  # Use the exact model name from the provider's API documentation
+  # Anthropic: claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4-20250514
   # OpenAI: gpt-4o-mini, gpt-4o, gpt-4-turbo
-  # Cerebras: llama-3.3-70b
-  # Groq: llama-3.3-70b-versatile
-  # Ollama: llama3.2, codellama, etc. (models you have pulled)
+  # Cerebras: llama-3.3-70b, gpt-oss-120b
+  # Groq: llama-3.3-70b-versatile, mixtral-8x7b-32768
+  # Ollama: llama3.2, codellama, etc. (models you have pulled locally)
   model: claude-haiku-4-5
 
   # Environment variable containing API key

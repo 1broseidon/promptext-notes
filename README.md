@@ -1,7 +1,7 @@
 # Promptext-Notes
 
 [![CI](https://github.com/1broseidon/promptext-notes/actions/workflows/ci.yml/badge.svg)](https://github.com/1broseidon/promptext-notes/actions/workflows/ci.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/1broseidon/promptext-notes)](https://goreportcard.com/report/github.com/1broseidon/promptext-notes)
+[![Go Report Card](https://goreportcard.com/badge/github.com/1broseidon/promptext-notes?v=v0.7.0)](https://goreportcard.com/report/github.com/1broseidon/promptext-notes)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A Go-based CLI tool that generates intelligent, context-aware release notes by combining git history analysis with code context extraction using the [promptext](https://github.com/1broseidon/promptext) library.
