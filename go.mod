@@ -2,7 +2,10 @@ module github.com/1broseidon/promptext-notes
 
 go 1.24.1
 
-require github.com/1broseidon/promptext v0.7.4
+require (
+	github.com/1broseidon/promptext v0.7.4
+	gopkg.in/yaml.v3 v3.0.1
+)
 
 require (
 	github.com/atotto/clipboard v0.1.4 // indirect
@@ -14,5 +17,4 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

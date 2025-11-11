@@ -1,0 +1,122 @@
+# Promptext-Notes Configuration File
+# Copy this file to .promptext-notes.yml and customize for your project
+
+version: "1"
+
+# AI Provider Configuration
+ai:
+  # Provider to use: anthropic, openai, cerebras, groq, ollama
+  provider: anthropic
+
+  # Model to use (provider-specific)
+  # Anthropic: claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4
+  # OpenAI: gpt-4o-mini, gpt-4o, gpt-4-turbo
+  # Cerebras: llama-3.3-70b
+  # Groq: llama-3.3-70b-versatile
+  # Ollama: llama3.2, codellama, etc. (models you have pulled)
+  model: claude-haiku-4-5
+
+  # Environment variable containing API key
+  # Set to empty string for Ollama (no API key needed)
+  api_key_env: ANTHROPIC_API_KEY
+
+  # Maximum tokens for AI response
+  max_tokens: 8000
+
+  # Temperature for AI generation (0.0 to 1.0)
+  # Lower = more focused, Higher = more creative
+  temperature: 0.3
+
+  # Timeout for AI requests
+  timeout: 30s
+
+  # Retry configuration
+  retry:
+    # Number of retry attempts
+    attempts: 3
+
+    # Backoff strategy: exponential, linear, constant
+    backoff: exponential
+
+    # Initial delay before first retry
+    initial_delay: 2s
+
+  # Provider-specific custom options
+  custom:
+    # Anthropic API version (optional)
+    # anthropic_version: "2023-06-01"
+
+    # Ollama base URL (optional, defaults to http://localhost:11434)
+    # ollama_url: "http://localhost:11434"
+
+# Output Configuration
+output:
+  # Output format: keepachangelog, conventional
+  format: keepachangelog
+
+  # Sections to include in changelog
+  sections:
+    - breaking
+    - added
+    - changed
+    - fixed
+    - docs
+
+  # Custom template path (optional)
+  # template: ./templates/custom-changelog.tmpl
+
+# Filtering Configuration
+filters:
+  # File filters
+  files:
+    # Include patterns (glob format)
+    include:
+      - "*.go"
+      - "*.md"
+      - "*.yml"
+      - "*.yaml"
+      - "*.json"
+      - "*.js"
+      - "*.ts"
+      - "*.tsx"
+      - "*.py"
+
+    # Exclude patterns (glob format)
+    exclude:
+      - "*_test.go"
+      - "vendor/*"
+      - "node_modules/*"
+      - ".git/*"
+      - "dist/*"
+      - "build/*"
+
+  # Commit filters
+  commits:
+    # Exclude commits from these authors
+    exclude_authors:
+      - "dependabot[bot]"
+      - "renovate[bot]"
+      - "github-actions[bot]"
+
+    # Exclude commits matching these patterns (regex)
+    exclude_patterns:
+      - "^Merge pull request"
+      - "^Merge branch"
+      - "^chore\\(deps\\):"
+
+# Usage Examples:
+#
+# 1. Generate AI-enhanced changelog (uses config file):
+#    promptext-notes --generate
+#
+# 2. Override provider via CLI:
+#    promptext-notes --generate --provider openai --model gpt-4o
+#
+# 3. Generate for specific version range:
+#    promptext-notes --generate --version v1.0.0 --since v0.9.0
+#
+# 4. Use local Ollama (free, no API key):
+#    promptext-notes --generate --provider ollama --model llama3.2
+#
+# 5. Save to file:
+#    promptext-notes --generate --output CHANGELOG.md
