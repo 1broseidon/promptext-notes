@@ -92,13 +92,8 @@ func GenerateReleaseNotes(ctx context.Context, opts GenerateOptions, provider ai
 			fmt.Fprintf(os.Stderr, "\n🤖 Generating AI-enhanced changelog using %s...\n", provider.Name())
 		}
 
-		// Create AI request
-		req := &ai.Request{
-			Prompt:      promptText,
-			Model:       "", // Will be set from config
-			MaxTokens:   0,  // Will be set from config
-			Temperature: 0,  // Will be set from config
-		}
+		// Create AI request using provider's configured defaults
+		req := provider.NewRequest(promptText)
 
 		// Call AI provider
 		response, err := provider.Generate(ctx, req)

@@ -101,6 +101,16 @@ func (p *OpenAIProvider) ValidateConfig() error {
 	return nil
 }
 
+// NewRequest creates a request from a prompt using provider's configured defaults
+func (p *OpenAIProvider) NewRequest(prompt string) *Request {
+	return &Request{
+		Prompt:      prompt,
+		Model:       p.config.AI.Model,
+		MaxTokens:   p.config.AI.MaxTokens,
+		Temperature: p.config.AI.Temperature,
+	}
+}
+
 // Generate sends a request to OpenAI and returns the response
 func (p *OpenAIProvider) Generate(ctx context.Context, req *Request) (*Response, error) {
 	if err := p.ValidateConfig(); err != nil {

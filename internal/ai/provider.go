@@ -17,6 +17,9 @@ type Provider interface {
 
 	// ValidateConfig checks if required credentials and configuration are present
 	ValidateConfig() error
+
+	// NewRequest creates a request from a prompt using provider's configured defaults
+	NewRequest(prompt string) *Request
 }
 
 // Request represents an AI generation request

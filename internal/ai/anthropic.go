@@ -100,6 +100,16 @@ func (p *AnthropicProvider) ValidateConfig() error {
 	return nil
 }
 
+// NewRequest creates a request from a prompt using provider's configured defaults
+func (p *AnthropicProvider) NewRequest(prompt string) *Request {
+	return &Request{
+		Prompt:      prompt,
+		Model:       p.config.AI.Model,
+		MaxTokens:   p.config.AI.MaxTokens,
+		Temperature: p.config.AI.Temperature,
+	}
+}
+
 // Generate sends a request to Anthropic and returns the response
 func (p *AnthropicProvider) Generate(ctx context.Context, req *Request) (*Response, error) {
 	if err := p.ValidateConfig(); err != nil {
