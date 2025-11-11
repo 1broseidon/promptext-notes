@@ -97,16 +97,20 @@ jobs:
           # Determine model based on provider (use GitHub Variables or defaults)
           case "$API_PROVIDER" in
             openai)
-              MODEL="${{ vars.OPENAI_MODEL || 'gpt-4o-mini' }}"
+              MODEL="${{ vars.OPENAI_MODEL }}"
+              MODEL="${MODEL:-gpt-4o-mini}"
               ;;
             anthropic)
-              MODEL="${{ vars.ANTHROPIC_MODEL || 'claude-haiku-4-5' }}"
+              MODEL="${{ vars.ANTHROPIC_MODEL }}"
+              MODEL="${MODEL:-claude-haiku-4-5}"
               ;;
             cerebras)
-              MODEL="${{ vars.CEREBRAS_MODEL || 'llama-3.3-70b' }}"
+              MODEL="${{ vars.CEREBRAS_MODEL }}"
+              MODEL="${MODEL:-llama-3.3-70b}"
               ;;
             groq)
-              MODEL="${{ vars.GROQ_MODEL || 'llama-3.3-70b-versatile' }}"
+              MODEL="${{ vars.GROQ_MODEL }}"
+              MODEL="${MODEL:-llama-3.3-70b-versatile}"
               ;;
             *)
               MODEL=""
