@@ -58,6 +58,18 @@ else
     echo "     Install: go install honnef.co/go/tools/cmd/staticcheck@latest"
 fi
 
+# Run gocyclo if installed
+if command -v gocyclo &> /dev/null; then
+    echo "  → Running gocyclo..."
+    if ! gocyclo -over 20 .; then
+        echo "❌ gocyclo failed (complexity > 20)"
+        exit 1
+    fi
+else
+    echo "  ⚠️  gocyclo not installed (skipping)"
+    echo "     Install: go install github.com/fzipp/gocyclo/cmd/gocyclo@latest"
+fi
+
 # Run tests
 echo "  → Running tests..."
 if ! go test ./... -short; then

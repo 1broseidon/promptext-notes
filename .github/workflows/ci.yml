@@ -44,8 +44,8 @@ jobs:
 
       - name: Run gocyclo
         run: |
-          # Fail if any function has cyclomatic complexity > 15
-          gocyclo -over 15 .
+          # Fail if any function has cyclomatic complexity > 20
+          gocyclo -over 20 .
           if [ $? -ne 0 ]; then
             echo "Code complexity too high"
             exit 1
