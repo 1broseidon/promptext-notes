@@ -9,25 +9,22 @@ import (
 )
 
 // DefaultPolishPrompt is the default prompt for polishing changelogs
-const DefaultPolishPrompt = `Polish this changelog entry. The diff is provided for verification only.
+const DefaultPolishPrompt = `You are a technical writer. Polish this changelog for public consumption.
 
 CHANGELOG:
 %s
 
-DIFF (for verification):
-%s
-
 Rules:
-1. Keep EXACTLY the same number of items - do NOT add or remove any
-2. Only reword the existing text
-3. Avoid "we", "we've", "our"
-4. Use active voice: "Updated X", "Fixed Y"
-5. Keep it concise
+- Keep the exact same items (do NOT add or remove anything)
+- Only improve the wording
+- Avoid "we", "we've", "our"
+- Use active voice: "Updated X", "Fixed Y"
+- Keep it concise
 
-Output only the polished changelog with the SAME items.`
+Output only the polished changelog.`
 
-// PolishChangelog takes a draft changelog, diff, and polishes it using a second AI model
-func PolishChangelog(ctx context.Context, draftChangelog string, diff string, cfg *config.Config) (string, error) {
+// PolishChangelog takes a draft changelog and polishes it using a second AI model
+func PolishChangelog(ctx context.Context, draftChangelog string, cfg *config.Config) (string, error) {
 	if !cfg.AI.Polish.Enabled {
 		return draftChangelog, nil // Polish not enabled, return draft as-is
 	}
@@ -82,9 +79,9 @@ func PolishChangelog(ctx context.Context, draftChangelog string, diff string, cf
 	// Prepare polish prompt
 	polishPrompt := cfg.AI.Polish.PolishPrompt
 	if polishPrompt == "" {
-		polishPrompt = fmt.Sprintf(DefaultPolishPrompt, draftChangelog, diff)
+		polishPrompt = fmt.Sprintf(DefaultPolishPrompt, draftChangelog)
 	} else {
-		polishPrompt = fmt.Sprintf(polishPrompt, draftChangelog, diff)
+		polishPrompt = fmt.Sprintf(polishPrompt, draftChangelog)
 	}
 
 	// Create polish request

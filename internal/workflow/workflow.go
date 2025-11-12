@@ -138,7 +138,7 @@ func GenerateReleaseNotes(ctx context.Context, opts GenerateOptions, provider ai
 				fmt.Fprintf(os.Stderr, "\n✨ Polishing changelog with %s (%s)...\n", polishProvider, polishModel)
 			}
 
-			polishedContent, err := PolishChangelog(ctx, content, gitData.diff, cfg)
+			polishedContent, err := PolishChangelog(ctx, content, cfg)
 			if err != nil {
 				return "", fmt.Errorf("failed to polish changelog: %w", err)
 			}
