@@ -83,6 +83,7 @@ func main() {
 		UseAI:        *generate,
 		AIPromptOnly: *aiPrompt,
 		Verbose:      !*quiet,
+		ExcludeFiles: cfg.Filters.Files.Exclude, // Pass exclusions from config
 	}
 
 	// Create context with timeout

@@ -8,16 +8,29 @@ import (
 
 // ExtractCodeContext extracts code context from changed files using promptext.
 // It focuses on relevant file types (.go, .md, .yml, .yaml) and applies a token budget.
-func ExtractCodeContext(changedFiles []string) (*promptext.Result, error) {
+// The excludePatterns parameter allows filtering out specific files by filename.
+func ExtractCodeContext(changedFiles []string, excludePatterns []string) (*promptext.Result, error) {
 	// Focus on code and documentation files
 	relevantExts := []string{".go", ".md", ".yml", ".yaml"}
 
-	// Filter changed files by extension and exclude meta files
+	// Default exclusions if none provided
+	if len(excludePatterns) == 0 {
+		excludePatterns = []string{"CHANGELOG.md", "README.md"}
+	}
+
+	// Filter changed files by extension and exclude patterns
 	var relevantFiles []string
 	for _, file := range changedFiles {
-		// Skip CHANGELOG and README - these are meta-documentation that pollute context
+		// Check if file matches any exclude pattern (by basename)
+		excluded := false
 		base := filepath.Base(file)
-		if base == "CHANGELOG.md" || base == "README.md" {
+		for _, pattern := range excludePatterns {
+			if base == pattern {
+				excluded = true
+				break
+			}
+		}
+		if excluded {
 			continue
 		}
 

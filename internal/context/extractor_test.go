@@ -49,7 +49,7 @@ func TestExtractCodeContext(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := ExtractCodeContext(tt.changedFiles)
+			result, err := ExtractCodeContext(tt.changedFiles, nil) // nil uses default exclusions
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ExtractCodeContext() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -87,7 +87,7 @@ func TestExtractCodeContextFileFiltering(t *testing.T) {
 		"package-lock.json", // Should be filtered out
 	}
 
-	result, err := ExtractCodeContext(changedFiles)
+	result, err := ExtractCodeContext(changedFiles, nil) // nil uses default exclusions
 	if err != nil {
 		t.Fatalf("ExtractCodeContext() unexpected error: %v", err)
 	}
@@ -134,7 +134,7 @@ func TestExtractCodeContextInTestDirectory(t *testing.T) {
 
 	// Test with files that exist
 	changedFiles := []string{"test.go", "README.md", "config.yml"}
-	result, err := ExtractCodeContext(changedFiles)
+	result, err := ExtractCodeContext(changedFiles, nil) // nil uses default exclusions
 	if err != nil {
 		t.Fatalf("ExtractCodeContext() unexpected error: %v", err)
 	}
@@ -168,7 +168,7 @@ func TestExtractCodeContextTokenBudget(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := ExtractCodeContext(tt.changedFiles)
+			result, err := ExtractCodeContext(tt.changedFiles, nil) // nil uses default exclusions
 			if err != nil {
 				t.Fatalf("ExtractCodeContext() unexpected error: %v", err)
 			}

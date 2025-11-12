@@ -73,12 +73,12 @@ Output:
 **NEW!** Generate AI-enhanced changelog directly with a single command:
 
 ```bash
-# Using Groq (default with config file - free tier)
-export GROQ_API_KEY="your-key-here"
+# Using Cerebras (default with config file - free tier, best for large prompts)
+export CEREBRAS_API_KEY="your-key-here"
 promptext-notes --generate --version v1.0.0
 
 # Or specify provider inline
-promptext-notes --generate --provider anthropic --model claude-haiku-4-5 --version v1.0.0
+promptext-notes --generate --provider groq --model llama-3.3-70b-versatile --version v1.0.0
 ```
 
 The `--generate` flag will:
@@ -188,9 +188,9 @@ When you push a version tag (e.g., `v1.0.0`), the workflow automatically:
 
 | Provider | Default Model | Context Limit | Cost | Setup URL |
 |----------|---------------|---------------|------|-----------|
-| **Groq** 🆕 | llama-3.3-70b-versatile | 32K tokens | ✅ Free | [console.groq.com](https://console.groq.com/keys) |
+| **Cerebras** 🆕 | zai-glm-4.6 | 65K tokens | ✅ Free | [cerebras.ai](https://cerebras.ai) |
+| **Groq** | llama-3.3-70b-versatile | 32K tokens | ✅ Free | [console.groq.com](https://console.groq.com/keys) |
 | **Ollama** | llama3.2 | Varies | ✅ Free (Local) | [ollama.com](https://ollama.com) |
-| **Cerebras** | zai-glm-4.6 | 65K tokens | ✅ Free | [cerebras.ai](https://cerebras.ai) |
 | **OpenAI** | gpt-4o-mini | 128K tokens | 💰 $0.15/$0.60 per 1M | [platform.openai.com](https://platform.openai.com/api-keys) |
 | **Anthropic** | claude-haiku-4-5 | 200K tokens | 💰 $0.80/$4.00 per 1M | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
 
@@ -202,8 +202,8 @@ When you push a version tag (e.g., `v1.0.0`), the workflow automatically:
    - Go to your repository → **Settings** → **Secrets and variables** → **Actions**
    - Click **"New repository secret"**
    - Add one or more of these secrets:
-     - `GROQ_API_KEY` - For Groq (recommended - free with Kimi K2)
-     - `CEREBRAS_API_KEY` - For Cerebras (free)
+     - `CEREBRAS_API_KEY` - For Cerebras (recommended - free, best for large prompts)
+     - `GROQ_API_KEY` - For Groq (free, good for smaller prompts)
      - `OPENAI_API_KEY` - For OpenAI
      - `ANTHROPIC_API_KEY` - For Anthropic
 
@@ -221,7 +221,7 @@ When you push a version tag (e.g., `v1.0.0`), the workflow automatically:
    git push origin v1.0.0
    ```
 
-The workflow will automatically generate and publish AI-enhanced release notes using Groq (default, free) or your configured provider!
+The workflow will automatically generate and publish AI-enhanced release notes using Cerebras (default, free) or your configured provider!
 
 ### Local CLI Usage (Recommended)
 
@@ -236,13 +236,13 @@ promptext-notes --generate --version v1.0.0
 export OPENAI_API_KEY="your-key-here"
 promptext-notes --generate --provider openai --model gpt-4o-mini --version v1.0.0
 
-# Using Groq (default, free tier)
-export GROQ_API_KEY="your-key-here"
+# Using Cerebras (default, free tier, best for large prompts)
+export CEREBRAS_API_KEY="your-key-here"
 promptext-notes --generate --version v1.0.0
 
-# Using Cerebras (free tier)
-export CEREBRAS_API_KEY="your-key-here"
-promptext-notes --generate --provider cerebras --version v1.0.0 --output CHANGELOG.md
+# Using Groq (free tier, good for smaller prompts)
+export GROQ_API_KEY="your-key-here"
+promptext-notes --generate --provider groq --version v1.0.0
 
 # Using Ollama (local, free, no API key needed!)
 # First: ollama pull llama3.2
@@ -254,8 +254,8 @@ promptext-notes --generate --provider ollama --model llama3.2 --version v1.0.0
 You can also use the shell script (will be deprecated in future versions):
 
 ```bash
-# Using Groq (default)
-export GROQ_API_KEY="your-key-here"
+# Using Cerebras (default)
+export CEREBRAS_API_KEY="your-key-here"
 ./scripts/generate-release-notes.sh v1.0.0
 
 # Using OpenAI
@@ -265,16 +265,16 @@ export OPENAI_API_KEY="your-key-here"
 
 ### Available Models by Provider
 
-**Groq** (free, fast):
+**Cerebras** (free, ultra-fast, best for large prompts):
+- `zai-glm-4.6` (default) - Multilingual support, best for large context
+- `gpt-oss-120b` - 120B params, best free quality
+- `llama-3.3-70b` - 70B params, good balance
+
+**Groq** (free, fast, best for smaller prompts):
 - `llama-3.3-70b-versatile` (default) - Best for general use, 32K context
 - `mixtral-8x7b-32768` - Good for technical content
 - `llama-3.1-70b-versatile` - Alternative option
 - `moonshotai/kimi-k2-instruct-0905` - Kimi K2 model with 128K context (requires paid tier for large prompts)
-
-**Cerebras** (free, ultra-fast):
-- `zai-glm-4.6` (default) - Multilingual support
-- `gpt-oss-120b` - 120B params, best free quality
-- `llama-3.3-70b` - 70B params, good balance
 
 **OpenAI** (paid, 2025 models):
 - `gpt-5-nano` (default) - **Most economical** ($0.05/$0.40 per 1M tokens)

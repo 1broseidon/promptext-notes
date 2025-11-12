@@ -6,20 +6,20 @@ version: "1"
 # AI Provider Configuration
 ai:
   # Provider to use: anthropic, openai, cerebras, groq, ollama
-  provider: groq
+  provider: cerebras
 
   # Model to use (exact API model name - no aliases)
   # Use the exact model name from the provider's API documentation
   # Anthropic: claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4-20250514
   # OpenAI: gpt-4o-mini, gpt-4o, gpt-4-turbo
-  # Cerebras: llama-3.3-70b, gpt-oss-120b, zai-glm-4.6
-  # Groq: llama-3.3-70b-versatile, moonshotai/kimi-k2-instruct-0905 (needs paid tier for large prompts), mixtral-8x7b-32768
+  # Cerebras: zai-glm-4.6, gpt-oss-120b, llama-3.3-70b
+  # Groq: llama-3.3-70b-versatile, mixtral-8x7b-32768, moonshotai/kimi-k2-instruct-0905
   # Ollama: llama3.2, codellama, etc. (models you have pulled locally)
-  model: llama-3.3-70b-versatile
+  model: zai-glm-4.6
 
   # Environment variable containing API key
   # Set to empty string for Ollama (no API key needed)
-  api_key_env: GROQ_API_KEY
+  api_key_env: CEREBRAS_API_KEY
 
   # Maximum tokens for AI response
   max_tokens: 8000
@@ -82,14 +82,19 @@ filters:
       - "*.tsx"
       - "*.py"
 
-    # Exclude patterns (glob format)
+    # Exclude patterns (by filename - useful for preventing meta-documentation
+    # from influencing AI-generated changelogs)
+    # NOTE: Add files here that you don't want the AI to see when generating changelogs
     exclude:
-      - "*_test.go"
-      - "vendor/*"
-      - "node_modules/*"
-      - ".git/*"
-      - "dist/*"
-      - "build/*"
+      - "CHANGELOG.md"               # Prevent AI from seeing existing changelog
+      - "README.md"                  # Exclude general project documentation
+      - ".promptext-notes.example.yml"  # Exclude example config
+      - "*_test.go"                  # Exclude test files
+      - "vendor/*"                   # Exclude vendor dependencies
+      - "node_modules/*"             # Exclude Node.js dependencies
+      - ".git/*"                     # Exclude git metadata
+      - "dist/*"                     # Exclude build output
+      - "build/*"                    # Exclude build artifacts
 
   # Commit filters
   commits:

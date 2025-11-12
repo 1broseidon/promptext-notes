@@ -22,6 +22,7 @@ type GenerateOptions struct {
 	UseAI        bool
 	AIPromptOnly bool
 	Verbose      bool
+	ExcludeFiles []string // Files to exclude from AI context (e.g., CHANGELOG.md)
 }
 
 // gitData holds git-related data for release notes
@@ -96,7 +97,7 @@ func GenerateReleaseNotes(ctx context.Context, opts GenerateOptions, provider ai
 		fmt.Fprintln(os.Stderr, "\n🔍 Extracting code context with promptext...")
 	}
 
-	result, err := aicontext.ExtractCodeContext(gitData.changedFiles)
+	result, err := aicontext.ExtractCodeContext(gitData.changedFiles, opts.ExcludeFiles)
 	if err != nil {
 		return "", fmt.Errorf("failed to extract context: %w", err)
 	}
