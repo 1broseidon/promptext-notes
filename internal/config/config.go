@@ -273,15 +273,16 @@ func (c *Config) GetAPIKey() (string, error) {
 // Validate checks if the configuration is valid
 func (c *Config) Validate() error {
 	validProviders := map[string]bool{
-		"anthropic": true,
-		"openai":    true,
-		"cerebras":  true,
-		"groq":      true,
-		"ollama":    true,
+		"anthropic":  true,
+		"openai":     true,
+		"cerebras":   true,
+		"groq":       true,
+		"openrouter": true,
+		"ollama":     true,
 	}
 
 	if !validProviders[c.AI.Provider] {
-		return fmt.Errorf("invalid AI provider: %s (supported: anthropic, openai, cerebras, groq, ollama)", c.AI.Provider)
+		return fmt.Errorf("invalid AI provider: %s (supported: anthropic, openai, cerebras, groq, openrouter, ollama)", c.AI.Provider)
 	}
 
 	if c.AI.MaxTokens <= 0 {
