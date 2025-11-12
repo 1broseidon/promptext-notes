@@ -6,24 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [v0.7.6] - 2025-11-12
-
-### Added
-- **2-Stage Polish Workflow for Premium Release Notes** - Implemented a two-stage workflow that combines technical discovery models with customer-facing language models to elevate release note quality.
-- **OpenRouter Support for Expanded AI Model Access** - Integrated OpenRouter to provide access to a vast array of AI models through a single API.
-- **Configurable File Exclusions for Focused AI Context** - Added ability to exclude specific files or directories when generating release notes, ensuring AI models focus on relevant code changes.
-
-### Changed
-- **Default AI Provider Updated to Cerebras (llama-3.3-70b)** - Changed default AI provider to Cerebras using the `llama-3.3-70b` model for improved accessibility and higher quality results.
-- **Granular Configuration for 2-Stage Polish Workflow** - Made the 2-stage polish workflow highly configurable with precise control over operation and behavior.
-- **Enhanced GitHub Actions Workflow** - Updated GitHub Actions workflow to leverage the new `llama-3.3-70b` model and integrate with OpenRouter support.
-
-### Fixed
-- **Context Pollution from Meta-Documentation Changes** - Fixed issue where meta-documentation changes could influence AI-generated changelogs, ensuring release notes focus on relevant code changes.
-- **Accurate Reflection of Significant Code Changes** - Fixed issue where impactful code modifications were not consistently identified and included in release notes.
-- **API Key Environment Variable Overrides** - Fixed problem where overriding the default AI provider via CLI flags did not correctly update the corresponding API key environment variable.
----
-
 ## [v0.7.5] - 2025-11-12
 
 ### Added
