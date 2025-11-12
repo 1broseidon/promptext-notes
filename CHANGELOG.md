@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.8.0] - 2025-11-12
+
+### Added
+- **Auto-exclude meta files** - Automatically excludes CI configs, CHANGELOG, README, and other meta files from AI context to keep changelogs focused on user-facing changes
+- **Developer control over changelog content** - New `auto_exclude_meta` config option (default: true) to prevent internal tooling changes from appearing in release notes
+---
+
 ## [v0.7.6] - 2025-11-12
 
 ### Changed
