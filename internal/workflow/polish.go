@@ -9,34 +9,25 @@ import (
 )
 
 // DefaultPolishPrompt is the default prompt for polishing changelogs
-const DefaultPolishPrompt = `You are a technical writer specializing in creating polished, customer-facing release notes.
+const DefaultPolishPrompt = `Polish this changelog entry. The diff is provided for verification only.
 
-Your task: Polish the language in the following changelog while preserving ALL content and technical accuracy.
-
-CRITICAL RULES:
-- DO NOT add, remove, or modify any features, changes, or fixes
-- DO NOT invent or hallucinate new content
-- ONLY polish the existing text for readability and professionalism
-- Keep the exact same sections and items as the original
-
-Language requirements:
-- Avoid first-person plural (no "we", "we've", "our")
-- Use direct, active voice: "Updated X", "Fixed bug in Z", "Improved feature A"
-- Maintain professional, customer-friendly tone
-- Expand brief descriptions for clarity without adding new information
-- Add helpful context only if clearly implied by the technical details
-
-Format requirements:
-- Keep the Keep a Changelog format (## [version], ### Added/Changed/Fixed sections)
-- Preserve all technical details and accuracy
-
-Original changelog:
+CHANGELOG:
 %s
 
-Output only the polished changelog with the same items, nothing else.`
+DIFF (for verification):
+%s
 
-// PolishChangelog takes a draft changelog and polishes it using a second AI model
-func PolishChangelog(ctx context.Context, draftChangelog string, cfg *config.Config) (string, error) {
+Rules:
+1. Keep EXACTLY the same number of items - do NOT add or remove any
+2. Only reword the existing text
+3. Avoid "we", "we've", "our"
+4. Use active voice: "Updated X", "Fixed Y"
+5. Keep it concise
+
+Output only the polished changelog with the SAME items.`
+
+// PolishChangelog takes a draft changelog, diff, and polishes it using a second AI model
+func PolishChangelog(ctx context.Context, draftChangelog string, diff string, cfg *config.Config) (string, error) {
 	if !cfg.AI.Polish.Enabled {
 		return draftChangelog, nil // Polish not enabled, return draft as-is
 	}
@@ -91,9 +82,9 @@ func PolishChangelog(ctx context.Context, draftChangelog string, cfg *config.Con
 	// Prepare polish prompt
 	polishPrompt := cfg.AI.Polish.PolishPrompt
 	if polishPrompt == "" {
-		polishPrompt = fmt.Sprintf(DefaultPolishPrompt, draftChangelog)
+		polishPrompt = fmt.Sprintf(DefaultPolishPrompt, draftChangelog, diff)
 	} else {
-		polishPrompt = fmt.Sprintf(polishPrompt, draftChangelog)
+		polishPrompt = fmt.Sprintf(polishPrompt, draftChangelog, diff)
 	}
 
 	// Create polish request
