@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.8.1] - 2025-11-12
+
+### Added
+- **Commit filtering** - Exclude bot commits and merge messages from changelog generation using configurable patterns
+- **Output section customization** - Control which changelog sections appear (breaking, added, changed, fixed, docs) through configuration options
+- **Auto-exclude-meta filtering** - Automatically exclude CI configurations, CHANGELOG, README, and other meta files from AI context to maintain focus on user-facing changes
+
+### Changed
+- **Default AI provider** - Switched from Anthropic to Cerebras for free access to high-quality models
+- **Default model** - Updated to `zai-glm-4.6` for improved accuracy at no cost
+- **File exclusion patterns** - Added support for glob patterns (e.g., `*.tmp`, `build/**`) to enable more flexible file filtering
+
+### Fixed
+- **Context pollution** - Meta-documentation changes no longer influence AI-generated changelog content
+- **File filtering** - Exclusion patterns now correctly apply to promptext context extraction
+---
+
 ## [v0.8.0] - 2025-11-12
 
 ### Added
