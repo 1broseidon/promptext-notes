@@ -6,6 +6,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.7.5] - 2025-11-12
+
+### Added
+- **Enhanced 2-Stage Polish Workflow for Premium Release Notes**
+  We've introduced a sophisticated two-stage workflow designed to generate exceptionally high-quality release notes. This new process intelligently combines the precision of technical discovery models, which excel at identifying and summarizing core changes, with the eloquence of customer-facing language models. The result is release notes that are not only technically accurate but also clearly articulated and engaging for your audience.
+
+- **Expanded AI Model Access with OpenRouter Support**
+  To provide you with greater flexibility and cost-efficiency in generating AI-enhanced release notes, we've integrated support for OpenRouter. This integration allows you to access a vast ecosystem of hundreds of AI models through a single, unified API. You can now choose from a wider selection of models to best suit your specific needs and budget.
+
+- **Configurable File Exclusions for Focused AI Context**
+  You now have more control over the information provided to our AI models. With configurable file exclusions, you can specify certain files or directories that should be ignored when generating release notes. This ensures that the AI focuses only on relevant code changes, preventing "context pollution" from non-essential files. You can configure this using the `--exclude-files` CLI flag or through your configuration file settings.
+
+- **Improved Error Handling for Smoother Operations**
+  We've significantly enhanced our error handling mechanisms, providing clearer and more informative messages for issues related to Git operations and AI requests. This improvement helps you quickly understand and resolve any problems, leading to a more seamless and reliable experience.
+
+### Changed
+- **Updated Default AI Provider to Cerebras (llama-3.3-70b)**
+  To offer improved accessibility and higher quality out-of-the-box, we have updated our default AI provider to Cerebras, utilizing the `llama-3.3-70b` model. This change ensures that even users on free tiers can benefit from a powerful and capable AI model for their release notes generation.
+
+- **Granular Configuration for the 2-Stage Polish Workflow**
+  The new 2-stage polish workflow is now highly configurable. You can precisely define the discovery and polish models, their respective providers, and API keys. This allows you to fine-tune the workflow to meet your specific requirements for accuracy and linguistic style.
+
+- **Enhanced GitHub Actions Workflow**
+  Our GitHub Actions workflow has been updated to leverage the new `llama-3.3-70b` model for improved performance and quality. Additionally, we've integrated support for OpenRouter, giving you more options for AI model selection directly within your CI/CD pipeline.
+
+### Fixed
+- **Resolved Context Pollution from Meta-Documentation Changes**
+  We've addressed an issue where changes in meta-documentation (e.g., READMEs, contributing guidelines) could inadvertently influence the AI's understanding of code changes, leading to irrelevant or misleading content in the generated release notes. The AI now correctly distinguishes between code changes and documentation updates.
+
+- **Accurate Reflection of Significant Code Changes**
+  Previously, significant code changes that were not explicitly detailed in commit messages might have been overlooked during release notes generation. This issue has been resolved, ensuring that all impactful code modifications are now accurately identified and included in your release notes, regardless of commit message verbosity.
+
+- **Correct API Key Environment Variable Overrides**
+  We fixed a problem where overriding the default AI provider via CLI flags did not correctly update the corresponding API key environment variable. This ensures that when you specify a different provider through the CLI, the correct API key is always used, preventing authentication failures.
+---
+
 ## [v0.7.3] - 2025-11-12
 
 ### Added
