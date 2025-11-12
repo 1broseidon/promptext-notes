@@ -251,27 +251,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Stash the updated CHANGELOG.md
-          git stash push -u CHANGELOG.md
-
-          # Checkout main and pull latest
-          git fetch origin main
-          git checkout main
-          git pull --rebase origin main
-
-          # Apply the stashed CHANGELOG.md
-          git stash pop
-
-          # Add and commit CHANGELOG.md
           git add CHANGELOG.md
 
-          # Commit if there are changes
-          if ! git diff --staged --quiet; then
-            git commit -m "docs: update CHANGELOG for ${{ steps.version.outputs.version }}"
-            git push origin main
-            echo "✅ Pushed CHANGELOG.md to main branch"
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
           else
-            echo "No changes to commit (CHANGELOG already up to date)"
+            git commit -m "docs: update CHANGELOG for ${{ steps.version.outputs.version }}"
+            git push origin HEAD:main
+            echo "✅ Pushed CHANGELOG.md to main branch"
           fi
 
       - name: Upload release notes artifact
