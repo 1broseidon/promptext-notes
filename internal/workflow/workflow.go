@@ -81,6 +81,26 @@ func fetchGitData(sinceTag string, verbose bool) (*gitData, error) {
 	return data, nil
 }
 
+// filterCommitsIfNeeded applies commit filters from config if provided
+func filterCommitsIfNeeded(commits []string, cfg *config.Config, verbose bool) []string {
+	if cfg == nil || (len(cfg.Filters.Commits.ExcludeAuthors) == 0 && len(cfg.Filters.Commits.ExcludePatterns) == 0) {
+		return commits
+	}
+
+	filterConfig := &analyzer.CommitFilterConfig{
+		ExcludeAuthors:  cfg.Filters.Commits.ExcludeAuthors,
+		ExcludePatterns: cfg.Filters.Commits.ExcludePatterns,
+	}
+	filtered := analyzer.FilterCommits(commits, filterConfig)
+
+	if verbose && len(filtered) < len(commits) {
+		fmt.Fprintf(os.Stderr, "   Filtered %d commits (excluded %d)\n",
+			len(filtered), len(commits)-len(filtered))
+	}
+
+	return filtered
+}
+
 // GenerateReleaseNotes orchestrates the full release notes generation process
 func GenerateReleaseNotes(ctx context.Context, opts GenerateOptions, provider ai.Provider, cfg *config.Config) (string, error) {
 	if opts.Verbose {
@@ -108,11 +128,12 @@ func GenerateReleaseNotes(ctx context.Context, opts GenerateOptions, provider ai
 			result.TokenCount, len(result.ProjectOutput.Files))
 	}
 
-	// Categorize commits
-	categories := analyzer.CategorizeCommits(gitData.commits)
+	// Filter and categorize commits
+	filteredCommits := filterCommitsIfNeeded(gitData.commits, cfg, opts.Verbose)
+	categories := analyzer.CategorizeCommits(filteredCommits)
 
-	// Generate AI prompt
-	promptText := prompt.GenerateAIPrompt(opts.Version, opts.SinceTag, gitData.commits,
+	// Generate AI prompt (use filtered commits)
+	promptText := prompt.GenerateAIPrompt(opts.Version, opts.SinceTag, filteredCommits,
 		categories, result, gitData.diffStats, gitData.diff)
 
 	// If only prompt is requested, return it
@@ -125,32 +146,7 @@ func GenerateReleaseNotes(ctx context.Context, opts GenerateOptions, provider ai
 
 	// If AI enhancement is requested, call the AI provider
 	if opts.UseAI && provider != nil {
-		content, err := generateAIContent(ctx, provider, promptText, opts.Verbose)
-		if err != nil {
-			return "", err
-		}
-
-		// Stage 2: Polish if enabled
-		if cfg != nil && cfg.AI.Polish.Enabled {
-			if opts.Verbose {
-				polishProvider := cfg.GetPolishProvider()
-				polishModel := cfg.GetPolishModel()
-				fmt.Fprintf(os.Stderr, "\n✨ Polishing changelog with %s (%s)...\n", polishProvider, polishModel)
-			}
-
-			polishedContent, err := PolishChangelog(ctx, content, cfg)
-			if err != nil {
-				return "", fmt.Errorf("failed to polish changelog: %w", err)
-			}
-
-			if opts.Verbose {
-				fmt.Fprintln(os.Stderr, "   ✓ Polish complete")
-			}
-
-			return polishedContent, nil
-		}
-
-		return content, nil
+		return generateWithAI(ctx, provider, promptText, cfg, opts.Verbose)
 	}
 
 	// Otherwise, generate basic release notes
@@ -158,7 +154,37 @@ func GenerateReleaseNotes(ctx context.Context, opts GenerateOptions, provider ai
 		fmt.Fprintln(os.Stderr, "\n📝 Generating release notes...")
 	}
 
-	return generator.GenerateReleaseNotes(opts.Version, categories, result), nil
+	return generator.GenerateReleaseNotes(opts.Version, categories, result, cfg), nil
+}
+
+// generateWithAI handles AI generation with optional polish stage
+func generateWithAI(ctx context.Context, provider ai.Provider, promptText string, cfg *config.Config, verbose bool) (string, error) {
+	content, err := generateAIContent(ctx, provider, promptText, verbose)
+	if err != nil {
+		return "", err
+	}
+
+	// Stage 2: Polish if enabled
+	if cfg != nil && cfg.AI.Polish.Enabled {
+		if verbose {
+			polishProvider := cfg.GetPolishProvider()
+			polishModel := cfg.GetPolishModel()
+			fmt.Fprintf(os.Stderr, "\n✨ Polishing changelog with %s (%s)...\n", polishProvider, polishModel)
+		}
+
+		polishedContent, err := PolishChangelog(ctx, content, cfg)
+		if err != nil {
+			return "", fmt.Errorf("failed to polish changelog: %w", err)
+		}
+
+		if verbose {
+			fmt.Fprintln(os.Stderr, "   ✓ Polish complete")
+		}
+
+		return polishedContent, nil
+	}
+
+	return content, nil
 }
 
 // generateAIContent calls the AI provider and processes the response

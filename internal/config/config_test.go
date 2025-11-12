@@ -14,12 +14,12 @@ func TestDefault(t *testing.T) {
 		t.Errorf("Expected version 1, got %s", config.Version)
 	}
 
-	if config.AI.Provider != "anthropic" {
-		t.Errorf("Expected anthropic provider, got %s", config.AI.Provider)
+	if config.AI.Provider != "cerebras" {
+		t.Errorf("Expected cerebras provider, got %s", config.AI.Provider)
 	}
 
-	if config.AI.Model != "claude-haiku-4-5" {
-		t.Errorf("Expected claude-haiku-4-5 model, got %s", config.AI.Model)
+	if config.AI.Model != "zai-glm-4.6" {
+		t.Errorf("Expected zai-glm-4.6 model, got %s", config.AI.Model)
 	}
 
 	if config.AI.MaxTokens != 8000 {
@@ -124,8 +124,8 @@ func TestLoadNonExistent(t *testing.T) {
 func TestLoadOrDefault(t *testing.T) {
 	// Test with nonexistent file - should return defaults
 	config := LoadOrDefault("/nonexistent/config.yml")
-	if config.AI.Provider != "anthropic" {
-		t.Errorf("Expected default anthropic provider, got %s", config.AI.Provider)
+	if config.AI.Provider != "cerebras" {
+		t.Errorf("Expected default cerebras provider, got %s", config.AI.Provider)
 	}
 
 	// Test with existing file
@@ -178,7 +178,7 @@ func TestGetDefaultModel(t *testing.T) {
 	}{
 		{"anthropic", "claude-haiku-4-5"},
 		{"openai", "gpt-4o-mini"},
-		{"cerebras", "llama-3.3-70b"},
+		{"cerebras", "zai-glm-4.6"},
 		{"groq", "llama-3.3-70b-versatile"},
 		{"ollama", "llama3.2"},
 		{"unknown", ""},

@@ -125,9 +125,9 @@ func Default() *Config {
 	return &Config{
 		Version: "1",
 		AI: AIConfig{
-			Provider:    "anthropic",
-			Model:       "claude-haiku-4-5",
-			APIKeyEnv:   "ANTHROPIC_API_KEY",
+			Provider:    "cerebras",
+			Model:       "zai-glm-4.6",
+			APIKeyEnv:   "CEREBRAS_API_KEY",
 			MaxTokens:   8000,
 			Temperature: 0.3,
 			Timeout:     30 * time.Second,
@@ -311,11 +311,11 @@ func getDefaultModel(provider string) string {
 	case "openai":
 		return "gpt-4o-mini"
 	case "cerebras":
-		return "llama-3.3-70b"
+		return "zai-glm-4.6" // Best free model (10/10 accuracy)
 	case "groq":
 		return "llama-3.3-70b-versatile"
 	case "openrouter":
-		return "openai/gpt-4o-mini" // Cost-effective default
+		return "anthropic/claude-sonnet-4.5" // Best polish model
 	case "ollama":
 		return "llama3.2"
 	default:

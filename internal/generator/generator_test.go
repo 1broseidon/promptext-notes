@@ -96,7 +96,7 @@ func TestGenerateReleaseNotes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := GenerateReleaseNotes(tt.version, tt.categories, tt.result)
+			got := GenerateReleaseNotes(tt.version, tt.categories, tt.result, nil)
 
 			// Check that all expected parts are present
 			for _, part := range tt.wantParts {
@@ -132,7 +132,7 @@ func TestGenerateReleaseNotesFormat(t *testing.T) {
 		},
 	}
 
-	notes := GenerateReleaseNotes("v1.0.0", categories, result)
+	notes := GenerateReleaseNotes("v1.0.0", categories, result, nil)
 
 	// Verify markdown structure
 	if !strings.HasPrefix(notes, "##") {
@@ -164,7 +164,7 @@ func TestGenerateReleaseNotesOnlyBreaking(t *testing.T) {
 		},
 	}
 
-	notes := GenerateReleaseNotes("v2.0.0", categories, result)
+	notes := GenerateReleaseNotes("v2.0.0", categories, result, nil)
 
 	// Should have breaking changes section
 	if !strings.Contains(notes, "### ⚠️ Breaking Changes") {

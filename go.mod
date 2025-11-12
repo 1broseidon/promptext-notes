@@ -9,6 +9,7 @@ require (
 
 require (
 	github.com/atotto/clipboard v0.1.4 // indirect
+	github.com/bmatcuk/doublestar/v4 v4.9.1 // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/jedib0t/go-pretty/v6 v6.6.5 // indirect

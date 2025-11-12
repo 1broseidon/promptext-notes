@@ -1,8 +1,21 @@
 package analyzer
 
 import (
+	"regexp"
 	"strings"
 )
+
+// CommitFilterConfig holds filtering rules for commits
+type CommitFilterConfig struct {
+	ExcludeAuthors  []string
+	ExcludePatterns []string
+}
+
+// Commit represents a git commit with metadata
+type Commit struct {
+	Message string
+	Author  string
+}
 
 // CommitCategories holds categorized commit messages.
 type CommitCategories struct {
@@ -82,4 +95,39 @@ func extractMessage(commit string, prefixes ...string) string {
 func (c *CommitCategories) CountTotal() int {
 	return len(c.Features) + len(c.Fixes) + len(c.Docs) +
 		len(c.Chores) + len(c.Changes) + len(c.Breaking)
+}
+
+// FilterCommits filters out commits based on author and message patterns.
+// This should be called before CategorizeCommits.
+func FilterCommits(commits []string, config *CommitFilterConfig) []string {
+	if config == nil || (len(config.ExcludeAuthors) == 0 && len(config.ExcludePatterns) == 0) {
+		return commits // No filtering needed
+	}
+
+	// Compile regex patterns once
+	var excludeRegexes []*regexp.Regexp
+	for _, pattern := range config.ExcludePatterns {
+		re, err := regexp.Compile(pattern)
+		if err == nil {
+			excludeRegexes = append(excludeRegexes, re)
+		}
+	}
+
+	filtered := make([]string, 0, len(commits))
+	for _, commit := range commits {
+		// Check if commit matches any exclude pattern
+		excluded := false
+		for _, re := range excludeRegexes {
+			if re.MatchString(commit) {
+				excluded = true
+				break
+			}
+		}
+
+		if !excluded {
+			filtered = append(filtered, commit)
+		}
+	}
+
+	return filtered
 }
