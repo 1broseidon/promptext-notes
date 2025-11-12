@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.7.3] - 2025-11-12
+
+### Added
+- **Git diff analysis** - Release notes generation now analyzes actual code changes line-by-line for more accurate and comprehensive release notes
+- **Executive Summary** - Generated release notes now include a high-level overview section showing change types, key files, and commit counts at a glance
+- **Documentation-only detection** - Automatically detects when only documentation files change and avoids generating empty release notes
+
+### Changed
+- **Default AI provider** - Example configuration now uses Groq with llama-3.3-70b-versatile model instead of Cerebras for better free tier accessibility
+- **Improved AI prompts** - Restructured prompt generation to prioritize actual code diffs over commit messages, resulting in more accurate release notes
+- **Context filtering** - Release notes generation now excludes CHANGELOG.md and README.md from AI context to reduce noise and improve focus on actual code changes
+- **Enhanced error handling** - Better error messages and graceful handling when git operations fail or diffs cannot be retrieved
+
+### Fixed
+- **Context pollution** - Resolved issue where meta-documentation changes would incorrectly influence AI-generated release notes
+- **Missed code changes** - Fixed problem where significant code changes not reflected in commit messages could be missed during release notes generation
+---
+
 ## [v0.7.2] - 2025-11-11
 
 ### ⚠️ BREAKING CHANGES
