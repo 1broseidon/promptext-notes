@@ -76,8 +76,8 @@ jobs:
         id: api
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
-            # Use Groq by default for tag pushes
-            API_PROVIDER="groq"
+            # Use Cerebras by default for tag pushes (higher free tier rate limits)
+            API_PROVIDER="cerebras"
           else
             API_PROVIDER="${{ inputs.api_provider }}"
           fi
