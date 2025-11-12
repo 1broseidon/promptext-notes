@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/1broseidon/promptext-notes/internal/ai"
 	"github.com/1broseidon/promptext-notes/internal/config"
@@ -23,8 +24,9 @@ func main() {
 	// AI flags
 	generate := flag.Bool("generate", false, "Generate AI-enhanced changelog (requires AI provider)")
 	aiPrompt := flag.Bool("ai-prompt", false, "Generate prompt for AI to enhance release notes (legacy mode)")
-	providerFlag := flag.String("provider", "", "AI provider (anthropic, openai, cerebras, groq, ollama)")
+	providerFlag := flag.String("provider", "", "AI provider (anthropic, openai, cerebras, groq, openrouter, ollama)")
 	modelFlag := flag.String("model", "", "AI model to use")
+	excludeFiles := flag.String("exclude-files", "", "Comma-separated list of files to exclude from AI context (e.g., CHANGELOG.md,README.md)")
 
 	// Other flags
 	quiet := flag.Bool("quiet", false, "Suppress progress messages")
@@ -47,6 +49,15 @@ func main() {
 	}
 	if *modelFlag != "" {
 		cfg.AI.Model = *modelFlag
+	}
+	if *excludeFiles != "" {
+		// Override config exclusions with CLI flag
+		files := strings.Split(*excludeFiles, ",")
+		// Trim whitespace from each entry
+		for i, file := range files {
+			files[i] = strings.TrimSpace(file)
+		}
+		cfg.Filters.Files.Exclude = files
 	}
 
 	// Validate configuration
