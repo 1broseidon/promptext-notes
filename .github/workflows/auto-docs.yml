@@ -131,24 +131,18 @@ jobs:
               ;;
           esac
 
-          # Build command with new integrated method
-          CMD="promptext-notes --generate --provider $API_PROVIDER --output release-notes.md --version $VERSION"
-
-          # Add model flag if set
-          if [ -n "$MODEL" ]; then
-            CMD="$CMD --model $MODEL"
-          fi
+          # Build command using config file (GLM + Claude Sonnet 4.5)
+          CMD="promptext-notes --generate --output release-notes.md --version $VERSION"
 
           # Add since tag if available
           if [ -n "$SINCE_TAG" ]; then
             CMD="$CMD --since $SINCE_TAG"
           fi
 
-          # Enable polish workflow if requested (default: true for tag pushes)
+          # Enable polish workflow for tag pushes (uses config: GLM discovery + Claude Sonnet polish)
           if [ "${{ github.event_name }}" = "push" ]; then
-            # Enable polish by default for tag pushes (customer-facing releases)
             CMD="$CMD --polish"
-            echo "✨ 2-stage polish workflow enabled for customer-facing release"
+            echo "✨ 2-stage polish workflow enabled: GLM (discovery) + Claude Sonnet 4.5 (polish)"
           elif [ "${{ inputs.enable_polish }}" = "true" ]; then
             CMD="$CMD --polish"
             echo "✨ 2-stage polish workflow enabled"
