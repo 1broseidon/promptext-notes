@@ -115,12 +115,11 @@ promptext-notes --generate --polish --version v1.0.0
 ```yaml
 ai:
   provider: cerebras
-  model: llama-3.3-70b  # FREE, excellent accuracy
+  model: llama-3.3-70b  # Stage 1 (Discovery) - FREE, excellent accuracy
 
   polish:
     enabled: true  # Or use --polish CLI flag
-    discovery_model: "llama-3.3-70b"  # Uses main provider (Cerebras - FREE)
-    polish_model: "google/gemini-2.5-flash"  # Customer-friendly polish
+    polish_model: "google/gemini-2.5-flash"  # Stage 2 - Customer-friendly polish
     polish_provider: "openrouter"  # Different provider for polish stage
     polish_api_key_env: "OPENROUTER_API_KEY"
     polish_max_tokens: 4000

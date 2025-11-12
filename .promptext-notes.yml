@@ -18,10 +18,11 @@ ai:
 
   custom: {}
 
-  # 2-Stage Polish Workflow (Cerebras discovery + OpenRouter polish)
+  # 2-Stage Polish Workflow
+  # Stage 1 (Discovery): Uses ai.model (llama-3.3-70b on Cerebras above - FREE)
+  # Stage 2 (Polish): Uses polish_model on OpenRouter below
   polish:
     enabled: false  # Enable via --polish flag or set to true
-    discovery_model: "llama-3.3-70b"
     polish_model: "google/gemini-2.5-flash"
     polish_provider: "openrouter"
     polish_api_key_env: "OPENROUTER_API_KEY"

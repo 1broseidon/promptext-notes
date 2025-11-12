@@ -32,8 +32,7 @@ type AIConfig struct {
 // PolishConfig defines 2-stage polish workflow configuration
 type PolishConfig struct {
 	Enabled           bool    `yaml:"enabled"`
-	DiscoveryModel    string  `yaml:"discovery_model"`    // Model for stage 1 (uses ai.provider)
-	PolishModel       string  `yaml:"polish_model"`       // Model for stage 2
+	PolishModel       string  `yaml:"polish_model"`       // Model for stage 2 (stage 1 uses ai.model)
 	PolishProvider    string  `yaml:"polish_provider"`    // Optional: different provider for polish (defaults to ai.provider)
 	PolishAPIKeyEnv   string  `yaml:"polish_api_key_env"` // Optional: API key env var (auto-detected from provider)
 	PolishPrompt      string  `yaml:"polish_prompt"`      // Custom polish prompt (optional)
@@ -124,7 +123,6 @@ func Default() *Config {
 			Custom: make(map[string]string),
 			Polish: PolishConfig{
 				Enabled:           false,
-				DiscoveryModel:    "", // Uses ai.model if not specified
 				PolishModel:       "", // Uses ai.model if not specified
 				PolishProvider:    "", // Uses ai.provider if not specified
 				PolishAPIKeyEnv:   "", // Auto-detected from provider
@@ -343,14 +341,6 @@ func (c *Config) GetPolishProvider() string {
 		return c.AI.Polish.PolishProvider
 	}
 	return c.AI.Provider
-}
-
-// GetDiscoveryModel returns the effective discovery model (defaults to main model)
-func (c *Config) GetDiscoveryModel() string {
-	if c.AI.Polish.DiscoveryModel != "" {
-		return c.AI.Polish.DiscoveryModel
-	}
-	return c.AI.Model
 }
 
 // GetPolishModel returns the effective polish model (defaults to main model)
