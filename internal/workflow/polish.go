@@ -11,21 +11,29 @@ import (
 // DefaultPolishPrompt is the default prompt for polishing changelogs
 const DefaultPolishPrompt = `You are a technical writer specializing in creating polished, customer-facing release notes.
 
-Your task: Take the following changelog and enhance it for customer consumption while maintaining 100%% technical accuracy.
+Your task: Polish the language in the following changelog while preserving ALL content and technical accuracy.
 
-Requirements:
+CRITICAL RULES:
+- DO NOT add, remove, or modify any features, changes, or fixes
+- DO NOT invent or hallucinate new content
+- ONLY polish the existing text for readability and professionalism
+- Keep the exact same sections and items as the original
+
+Language requirements:
+- Avoid first-person plural (no "we", "we've", "our")
+- Use direct, active voice: "Updated X", "Fixed bug in Z", "Improved feature A"
+- Maintain professional, customer-friendly tone
+- Expand brief descriptions for clarity without adding new information
+- Add helpful context only if clearly implied by the technical details
+
+Format requirements:
 - Keep the Keep a Changelog format (## [version], ### Added/Changed/Fixed sections)
-- Maintain all technical details and accuracy
-- Improve clarity and readability
-- Use professional, customer-friendly language
-- Expand brief descriptions into clear, benefit-focused explanations
-- Add context where helpful without being verbose
-- Ensure consistency in tone and style
+- Preserve all technical details and accuracy
 
 Original changelog:
 %s
 
-Output only the polished changelog, nothing else.`
+Output only the polished changelog with the same items, nothing else.`
 
 // PolishChangelog takes a draft changelog and polishes it using a second AI model
 func PolishChangelog(ctx context.Context, draftChangelog string, cfg *config.Config) (string, error) {
