@@ -1,84 +1,325 @@
 # Documentation
 
-Welcome to the promptext-notes documentation!
+Welcome to the `promptext-notes` documentation!
 
-## For External Users
+## For Users
 
-**[📚 Complete Integration Guide](USAGE.md)**
+**[📚 Usage Guide](USAGE.md)** - Complete guide to using the tool
 
-Step-by-step guide for adding automated AI-enhanced release notes to your repository:
+- Installation
+- Configuration
+- Local usage (manual, git hooks)
+- GitHub Actions integration
+- Examples and best practices
 
-- Quick start (5 minutes)
-- Detailed setup instructions
-- Provider-specific guides (OpenAI, Anthropic, Cerebras, Groq)
-- Advanced configuration
-- Troubleshooting
-- Examples
+**[⚙️ Configuration Reference](CONFIGURATION.md)** - Detailed config file reference
+
+- AI provider settings
+- 2-stage polish workflow
+- File filtering (`auto_exclude_meta` and more)
+- Output configuration
+- Complete examples for different use cases
+
+---
 
 ## For Contributors
+
+### Project Architecture
+
+**promptext-notes** is a CLI tool that generates AI-enhanced release notes from git history and code changes.
+
+#### Key Features (v0.8.0)
+
+1. **Multi-Provider AI Support** - Cerebras, OpenAI, Anthropic, Groq, OpenRouter, Ollama
+2. **2-Stage Polish Workflow** - Discovery (code analysis) + Polish (language refinement)
+3. **Auto-Exclude-Meta Filtering** - Keeps changelogs focused on user-facing changes
+4. **Configuration File** - YAML-based with sensible defaults
+5. **GitHub Actions Integration** - Automated release notes on tag push
+
+#### Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                           CLI Entry                             │
+│                  cmd/promptext-notes/main.go                    │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Workflow Orchestration                     │
+│                  internal/workflow/workflow.go                  │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │ Stage 1: Discovery (analyze code changes)               │  │
+│  │  → Git → Analyzer → Context → Prompt → AI → Changelog   │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                             │                                   │
+│                             ▼                                   │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │ Stage 2: Polish (optional, refine language)             │  │
+│  │  → Polish Prompt → Polish AI → Polished Changelog       │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ### Project Structure
 
 ```
 promptext-notes/
 ├── cmd/
-│   └── promptext-notes/     # CLI entry point
+│   └── promptext-notes/     # CLI entry point & flag parsing
+│
 ├── internal/
-│   ├── analyzer/            # Commit categorization
-│   ├── context/             # Code context extraction
-│   ├── generator/           # Release notes generation
-│   ├── git/                 # Git operations
-│   └── prompt/              # AI prompt generation
-├── scripts/
-│   └── generate-release-notes.sh  # AI provider integration
+│   ├── ai/                  # AI provider clients (OpenAI, Anthropic, Cerebras, etc.)
+│   ├── analyzer/            # Commit categorization (feat/fix/docs/etc.)
+│   ├── config/              # Configuration file handling
+│   ├── context/             # Code context extraction with Promptext
+│   ├── generator/           # Release notes formatting (Keep a Changelog, etc.)
+│   ├── git/                 # Git operations (log, diff, changed files)
+│   ├── prompt/              # AI prompt generation
+│   └── workflow/            # Workflow orchestration (discovery + polish)
+│
 ├── .github/workflows/
-│   ├── ci.yml               # CI/CD pipeline
-│   └── auto-docs.yml        # Automated release notes
-└── docs/
-    ├── README.md            # This file
-    └── USAGE.md             # External integration guide
+│   ├── ci.yml               # CI/CD pipeline (tests, lint, coverage)
+│   └── auto-docs.yml        # Automated release notes generation
+│
+├── docs/
+│   ├── README.md            # This file
+│   ├── USAGE.md             # User guide (install, config, usage)
+│   └── CONFIGURATION.md     # Config file reference
+│
+├── .promptext-notes.yml     # Tool's own configuration
+└── CHANGELOG.md             # Generated by the tool itself!
 ```
 
-### Development
+### Core Components
 
-See the main [README.md](../README.md) for development setup, testing, and contribution guidelines.
+#### 1. Git Analysis (`internal/git/`)
 
-### Adding a New AI Provider
+Extracts commit history and code changes:
+- `GetCommitRange()` - Get commits between two tags
+- `GetChangedFiles()` - Get list of files changed
+- `GetDiff()` - Get full diff of changes
 
-To add support for a new AI provider:
+#### 2. Commit Categorization (`internal/analyzer/`)
 
-1. Add provider function in `scripts/generate-release-notes.sh`:
-   ```bash
-   call_newprovider() {
-       local api_key="$1"
-       local prompt="$2"
-       # Implementation
+Categorizes commits using conventional commit format:
+- `feat:` → Added
+- `fix:` → Fixed
+- `docs:` → Docs
+- `refactor:`, `perf:` → Changed
+- `BREAKING CHANGE` → Breaking
+
+#### 3. Code Context Extraction (`internal/context/`)
+
+Uses [Promptext](https://github.com/stacklok/promptext) to extract relevant code snippets from changed files.
+
+#### 4. AI Providers (`internal/ai/`)
+
+Unified interface for multiple AI providers:
+- Anthropic (Claude Sonnet 4.5, Haiku 4.5)
+- OpenAI (GPT-4o, GPT-4o-mini)
+- Cerebras (Llama 3.3-70b, GLM-4.6)
+- Groq (Llama 3.3-70b-versatile)
+- OpenRouter (100+ models)
+- Ollama (local models)
+
+#### 5. 2-Stage Polish Workflow (`internal/workflow/`)
+
+Two-stage approach for premium quality:
+
+**Stage 1: Discovery**
+- Uses technical model (e.g., GLM-4.6) to analyze code changes
+- Generates accurate technical changelog
+- FREE with Cerebras
+
+**Stage 2: Polish** (optional)
+- Uses language model (e.g., Claude Sonnet 4.5) to refine wording
+- Adds BREAKING CHANGES categorization
+- Improves readability
+- ~$0.004/run with Claude Sonnet
+
+#### 6. Auto-Exclude-Meta Filtering (`internal/config/`)
+
+v0.8.0 feature that auto-excludes meta files from AI context:
+- `.github/**` - GitHub Actions, workflows
+- `CHANGELOG.md`, `README.md` - Documentation
+- `.promptext-notes*.yml` - Tool configs
+- `**/.gitignore` - Ignore files
+- `*.example.*` - Example files
+
+**Purpose:** Keeps changelogs focused on user-facing code changes.
+
+### Development Workflow
+
+#### Running Locally
+
+```bash
+# Build
+go build -o promptext-notes ./cmd/promptext-notes
+
+# Run
+./promptext-notes --generate --version v1.0.0
+
+# Run tests
+go test ./...
+
+# Run tests with coverage
+go test ./... -cover
+
+# Lint
+go vet ./...
+staticcheck ./...
+```
+
+#### Adding a New AI Provider
+
+1. **Add provider client** in `internal/ai/`:
+   ```go
+   func CallNewProvider(ctx context.Context, prompt string, apiKey string, model string) (string, error) {
+       // Implementation
    }
    ```
 
-2. Add provider to validation function
-3. Add to case statement in main logic
-4. Update workflow `.github/workflows/auto-docs.yml`
-5. Update documentation in `docs/USAGE.md`
-6. Add secret/variable names to README
+2. **Update config** in `internal/config/config.go`:
+   ```go
+   case "newprovider":
+       return "NEWPROVIDER_API_KEY"
+   ```
 
-### Improving Prompt Quality
+3. **Add default model** in `getDefaultModel()`:
+   ```go
+   case "newprovider":
+       return "default-model-name"
+   ```
 
-The AI prompt is generated in `internal/prompt/prompt.go`. Key sections:
+4. **Update workflow** in `internal/workflow/workflow.go`:
+   ```go
+   case "newprovider":
+       response, err = ai.CallNewProvider(ctx, prompt, apiKey, model)
+   ```
 
-- **Context metadata**: Version, commits, files changed
-- **Critical Rules**: What to omit, what to focus on
-- **Categorization rules**: Added vs Changed vs Fixed
-- **Example format**: Shows expected output structure
+5. **Add tests** in `internal/ai/newprovider_test.go`
 
-When improving prompts:
-1. Test with multiple AI providers
-2. Verify no "noise" content (docs updates, stats, etc.)
-3. Update tests in `internal/prompt/prompt_test.go`
-4. Document changes in CHANGELOG
+6. **Update docs** in `docs/CONFIGURATION.md` and `docs/USAGE.md`
+
+#### Adding a New Feature
+
+1. **Write tests first** (TDD)
+2. **Implement feature**
+3. **Update config schema** (if needed)
+4. **Update CLI flags** (if needed)
+5. **Update docs**
+6. **Update CHANGELOG**
+
+### Testing
+
+#### Unit Tests
+
+```bash
+# Run all tests
+go test ./...
+
+# Run specific package
+go test ./internal/analyzer -v
+
+# Run with coverage
+go test ./... -coverprofile=coverage.out
+go tool cover -html=coverage.out
+```
+
+#### Integration Tests
+
+```bash
+# Test with real API (requires API key)
+export CEREBRAS_API_KEY="your-key"
+go test ./internal/workflow -v -run TestWorkflow
+
+# Test config loading
+go test ./internal/config -v
+```
+
+#### Pre-commit Hooks
+
+The repo uses pre-commit hooks (`.pre-commit-config.yaml`):
+- `go fmt` - Format code
+- `go vet` - Static analysis
+- `staticcheck` - Additional linting
+- `gocyclo` - Complexity analysis
+- `go test` - Run all tests
+
+Install hooks:
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+### Code Quality Standards
+
+- **Test Coverage**: Aim for > 80%
+- **Cyclomatic Complexity**: < 15 per function
+- **Go Version**: 1.22+
+- **Linting**: Pass `go vet` and `staticcheck`
+- **Formatting**: Use `gofmt`
+
+### Release Process
+
+1. **Update version** in relevant files
+2. **Update CHANGELOG** (automated via the tool itself!)
+3. **Create git tag**: `git tag v1.0.0`
+4. **Push tag**: `git push origin v1.0.0`
+5. **GitHub Action runs** automatically:
+   - Generates AI-enhanced release notes
+   - Creates GitHub release
+   - Updates CHANGELOG.md
+   - Commits changes back to main
+
+### Documentation
+
+- **User docs**: `docs/USAGE.md`, `docs/CONFIGURATION.md`
+- **Code docs**: Godoc comments in code
+- **Examples**: `docs/USAGE.md#examples`
+- **Architecture**: This file
+
+### Contributing
+
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feature/my-feature`
+3. **Make** your changes
+4. **Test** thoroughly: `go test ./...`
+5. **Commit** with conventional commits: `feat: add new feature`
+6. **Push** and create a **Pull Request**
+
+---
+
+## Roadmap
+
+### v0.9.0 (Planned)
+
+- [ ] Commit message filtering (opt-in)
+- [ ] `[skip-changelog]` tag support
+- [ ] Interactive mode for manual review
+- [ ] Custom templates support
+
+### v1.0.0 (Future)
+
+- [ ] Semantic version auto-detection
+- [ ] Multi-language support (non-English changelogs)
+- [ ] Plugin system for custom processors
+- [ ] Web UI for changelog preview
+
+---
 
 ## Need Help?
 
+- **Usage Questions**: See [USAGE.md](USAGE.md)
+- **Config Help**: See [CONFIGURATION.md](CONFIGURATION.md)
 - **Bug Reports**: [GitHub Issues](https://github.com/1broseidon/promptext-notes/issues)
-- **Questions**: Open a [Discussion](https://github.com/1broseidon/promptext-notes/discussions)
+- **Feature Requests**: [GitHub Discussions](https://github.com/1broseidon/promptext-notes/discussions)
 - **Pull Requests**: Always welcome!
+
+---
+
+## License
+
+MIT - See [LICENSE](../LICENSE) for details

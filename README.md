@@ -11,8 +11,9 @@ A Go-based CLI tool that generates intelligent, context-aware release notes by c
 - 📊 **Git History Analysis**: Automatically analyzes commits since the last tag
 - 🔍 **Code Context Extraction**: Uses promptext to extract relevant code changes with token-aware analysis
 - 📝 **Conventional Commits**: Categorizes changes by type (feat, fix, docs, breaking, etc.)
-- 🤖 **Integrated AI Generation**: **NEW!** Generate AI-enhanced changelogs directly with `--generate` flag
-- ✨ **2-Stage Polish Workflow**: **NEW!** Combine accurate discovery with customer-friendly polish for premium quality
+- 🤖 **Integrated AI Generation**: Generate AI-enhanced changelogs directly with `--generate` flag
+- ✨ **2-Stage Polish Workflow**: Combine accurate discovery with customer-friendly polish for premium quality
+- 🚫 **Auto-Exclude-Meta** (v0.8.0): Automatically excludes CI configs, CHANGELOG, README from AI context
 - 🌐 **Multi-Provider Support**: Works with OpenRouter (200+ models), Anthropic, OpenAI, Cerebras, Groq, and local Ollama
 - ⚙️ **YAML Configuration**: Customize behavior with `.promptext-notes.yml` config file
 - 📋 **Keep a Changelog Format**: Produces standardized markdown output
@@ -115,11 +116,11 @@ promptext-notes --generate --polish --version v1.0.0
 ```yaml
 ai:
   provider: cerebras
-  model: llama-3.3-70b  # Stage 1 (Discovery) - FREE, excellent accuracy
+  model: zai-glm-4.6  # Stage 1 (Discovery) - FREE, 10/10 accuracy
 
   polish:
     enabled: true  # Or use --polish CLI flag
-    polish_model: "google/gemini-2.5-flash"  # Stage 2 - Customer-friendly polish
+    polish_model: "anthropic/claude-sonnet-4.5"  # Stage 2 - Premium polish
     polish_provider: "openrouter"  # Different provider for polish stage
     polish_api_key_env: "OPENROUTER_API_KEY"
     polish_max_tokens: 4000
@@ -127,31 +128,16 @@ ai:
 ```
 
 **Benefits:**
-- ✅ Grok catches technical details (only model that caught validation fix in tests)
-- ✅ Gemini 2.5 Flash creates beautiful customer-facing content
-- ✅ Same cost as single Gemini run (~$0.0074)
+- ✅ GLM-4.6: Best free model (10/10 accuracy, catches all technical details)
+- ✅ Claude Sonnet 4.5: Premium polish (8/10 quality, minimal hallucination)
+- ✅ **Total cost: ~$0.004/run** (discovery is FREE, polish is cheap)
 - ✅ Can mix FREE models (Cerebras) with paid polish (OpenRouter)
+- ✅ Auto-exclude-meta (v0.8.0): Keeps changelogs focused on user-facing changes
 
-**Example transformation:**
-
-**Before polish** (technical):
-```
-- CLI file exclusion flag - Use `--exclude-files` to specify files...
-```
-
-**After polish** (customer-friendly):
-```
-- **CLI File Exclusion Flag (`--exclude-files`)**: To give you more precise
-  control over the content analyzed by our AI, we've introduced a new
-  command-line interface (CLI) flag: `--exclude-files`. This flag allows
-  you to specify individual files or patterns to be excluded from the AI's
-  context analysis when generating release notes.
-```
-
-**Cost Analysis (from benchmarks):**
-- Single-stage (Gemini 2.5 Flash): $0.0074/run
-- 2-stage (Cerebras → Gemini): $0.0057/run (22% cheaper!)
-- 2-stage (Grok → Gemini): $0.0072/run (same cost as single Gemini)
+**Cost Analysis:**
+- Single-stage (GLM-4.6): $0 (FREE)
+- 2-stage (GLM + Claude Sonnet): ~$0.004/run
+- 2-stage (GLM + Haiku): ~$0.001/run (cheaper but less accurate)
 
 ### Custom Date Range
 
@@ -184,12 +170,18 @@ You can configure promptext-notes using a YAML configuration file. Copy `.prompt
 version: "1"
 
 ai:
-  provider: anthropic      # anthropic, openai, cerebras, groq, ollama
-  model: claude-haiku-4-5
-  api_key_env: ANTHROPIC_API_KEY
+  provider: cerebras      # cerebras, anthropic, openai, groq, openrouter, ollama
+  model: zai-glm-4.6      # Best free model (10/10 accuracy)
+  api_key_env: CEREBRAS_API_KEY
   max_tokens: 8000
   temperature: 0.3
   timeout: 30s
+
+  polish:
+    enabled: false  # Enable with --polish flag
+    polish_model: "anthropic/claude-sonnet-4.5"
+    polish_provider: "openrouter"
+    polish_api_key_env: "OPENROUTER_API_KEY"
 
 output:
   format: keepachangelog
@@ -197,11 +189,12 @@ output:
 
 filters:
   files:
+    auto_exclude_meta: true  # NEW in v0.8.0 - excludes CI, CHANGELOG, README
     include: ["*.go", "*.md", "*.yml"]
     exclude: ["*_test.go", "vendor/*"]
 ```
 
-See `.promptext-notes.example.yml` for full configuration options.
+See [CONFIGURATION.md](docs/CONFIGURATION.md) for full configuration options and [USAGE.md](docs/USAGE.md) for usage examples.
 
 ## Flags
 
