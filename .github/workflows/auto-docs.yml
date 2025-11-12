@@ -256,9 +256,22 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "docs: update CHANGELOG for ${{ steps.version.outputs.version }}"
-            git push origin HEAD:main
-            echo "✅ Pushed CHANGELOG.md to main branch"
+            # Checkout main and pull latest to avoid conflicts
+            git fetch origin main
+            git checkout main
+            git pull --rebase origin main
+
+            # Re-add CHANGELOG.md (might have changed during rebase)
+            git add CHANGELOG.md
+
+            # Only commit if there are still changes after rebase
+            if ! git diff --staged --quiet; then
+              git commit -m "docs: update CHANGELOG for ${{ steps.version.outputs.version }}"
+              git push origin main
+              echo "✅ Pushed CHANGELOG.md to main branch"
+            else
+              echo "No changes after rebase (CHANGELOG already updated)"
+            fi
           fi
 
       - name: Upload release notes artifact
