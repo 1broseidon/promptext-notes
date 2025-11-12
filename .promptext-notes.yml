@@ -5,7 +5,7 @@ version: "1"
 
 ai:
   provider: cerebras
-  model: llama-3.3-70b  # Best free model (9/10 quality)
+  model: zai-glm-4.6  # Best free model (10/10 accuracy)
   api_key_env: CEREBRAS_API_KEY
   max_tokens: 8000
   temperature: 0.3
@@ -19,11 +19,11 @@ ai:
   custom: {}
 
   # 2-Stage Polish Workflow
-  # Stage 1 (Discovery): Uses ai.model (llama-3.3-70b on Cerebras above - FREE)
+  # Stage 1 (Discovery): Uses ai.model (zai-glm-4.6 on Cerebras above - FREE)
   # Stage 2 (Polish): Uses polish_model on OpenRouter below
   polish:
     enabled: false  # Enable via --polish flag or set to true
-    polish_model: "google/gemini-2.5-flash"
+    polish_model: "anthropic/claude-sonnet-4.5"  # Best polish model (8/10 accuracy)
     polish_provider: "openrouter"
     polish_api_key_env: "OPENROUTER_API_KEY"
     polish_max_tokens: 4000
