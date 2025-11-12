@@ -251,12 +251,18 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # First, checkout main and pull latest (before staging any changes)
+          # Stash the updated CHANGELOG.md
+          git stash push -u CHANGELOG.md
+
+          # Checkout main and pull latest
           git fetch origin main
           git checkout main
           git pull --rebase origin main
 
-          # Now add CHANGELOG.md
+          # Apply the stashed CHANGELOG.md
+          git stash pop
+
+          # Add and commit CHANGELOG.md
           git add CHANGELOG.md
 
           # Commit if there are changes
