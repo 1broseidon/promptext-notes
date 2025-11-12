@@ -73,7 +73,7 @@ Output:
 **NEW!** Generate AI-enhanced changelog directly with a single command:
 
 ```bash
-# Using Groq with Kimi K2 (default with config file)
+# Using Groq (default with config file - free tier)
 export GROQ_API_KEY="your-key-here"
 promptext-notes --generate --version v1.0.0
 
@@ -188,7 +188,7 @@ When you push a version tag (e.g., `v1.0.0`), the workflow automatically:
 
 | Provider | Default Model | Context Limit | Cost | Setup URL |
 |----------|---------------|---------------|------|-----------|
-| **Groq** 🆕 | moonshotai/kimi-k2-instruct-0905 | 128K tokens | ✅ Free | [console.groq.com](https://console.groq.com/keys) |
+| **Groq** 🆕 | llama-3.3-70b-versatile | 32K tokens | ✅ Free | [console.groq.com](https://console.groq.com/keys) |
 | **Ollama** | llama3.2 | Varies | ✅ Free (Local) | [ollama.com](https://ollama.com) |
 | **Cerebras** | zai-glm-4.6 | 65K tokens | ✅ Free | [cerebras.ai](https://cerebras.ai) |
 | **OpenAI** | gpt-4o-mini | 128K tokens | 💰 $0.15/$0.60 per 1M | [platform.openai.com](https://platform.openai.com/api-keys) |
@@ -221,7 +221,7 @@ When you push a version tag (e.g., `v1.0.0`), the workflow automatically:
    git push origin v1.0.0
    ```
 
-The workflow will automatically generate and publish AI-enhanced release notes using Groq with Kimi K2 (default) or your configured provider!
+The workflow will automatically generate and publish AI-enhanced release notes using Groq (default, free) or your configured provider!
 
 ### Local CLI Usage (Recommended)
 
@@ -236,7 +236,7 @@ promptext-notes --generate --version v1.0.0
 export OPENAI_API_KEY="your-key-here"
 promptext-notes --generate --provider openai --model gpt-4o-mini --version v1.0.0
 
-# Using Groq with Kimi K2 (default, free tier)
+# Using Groq (default, free tier)
 export GROQ_API_KEY="your-key-here"
 promptext-notes --generate --version v1.0.0
 
@@ -265,11 +265,11 @@ export OPENAI_API_KEY="your-key-here"
 
 ### Available Models by Provider
 
-**Groq** (free, fast, 128K context):
-- `moonshotai/kimi-k2-instruct-0905` (default) - Kimi K2 model, excellent for technical content
-- `llama-3.3-70b-versatile` - Best for general use
+**Groq** (free, fast):
+- `llama-3.3-70b-versatile` (default) - Best for general use, 32K context
 - `mixtral-8x7b-32768` - Good for technical content
 - `llama-3.1-70b-versatile` - Alternative option
+- `moonshotai/kimi-k2-instruct-0905` - Kimi K2 model with 128K context (requires paid tier for large prompts)
 
 **Cerebras** (free, ultra-fast):
 - `zai-glm-4.6` (default) - Multilingual support

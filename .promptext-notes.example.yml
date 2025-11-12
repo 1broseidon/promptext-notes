@@ -13,9 +13,9 @@ ai:
   # Anthropic: claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4-20250514
   # OpenAI: gpt-4o-mini, gpt-4o, gpt-4-turbo
   # Cerebras: llama-3.3-70b, gpt-oss-120b, zai-glm-4.6
-  # Groq: moonshotai/kimi-k2-instruct-0905, llama-3.3-70b-versatile, mixtral-8x7b-32768
+  # Groq: llama-3.3-70b-versatile, moonshotai/kimi-k2-instruct-0905 (needs paid tier for large prompts), mixtral-8x7b-32768
   # Ollama: llama3.2, codellama, etc. (models you have pulled locally)
-  model: moonshotai/kimi-k2-instruct-0905
+  model: llama-3.3-70b-versatile
 
   # Environment variable containing API key
   # Set to empty string for Ollama (no API key needed)

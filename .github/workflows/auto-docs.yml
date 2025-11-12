@@ -113,7 +113,7 @@ jobs:
               ;;
             groq)
               MODEL="${{ vars.GROQ_MODEL }}"
-              MODEL="${MODEL:-moonshotai/kimi-k2-instruct-0905}"
+              MODEL="${MODEL:-llama-3.3-70b-versatile}"
               ;;
             *)
               MODEL=""
