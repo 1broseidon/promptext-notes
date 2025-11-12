@@ -251,27 +251,21 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # First, checkout main and pull latest (before staging any changes)
+          git fetch origin main
+          git checkout main
+          git pull --rebase origin main
+
+          # Now add CHANGELOG.md
           git add CHANGELOG.md
 
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
+          # Commit if there are changes
+          if ! git diff --staged --quiet; then
+            git commit -m "docs: update CHANGELOG for ${{ steps.version.outputs.version }}"
+            git push origin main
+            echo "✅ Pushed CHANGELOG.md to main branch"
           else
-            # Checkout main and pull latest to avoid conflicts
-            git fetch origin main
-            git checkout main
-            git pull --rebase origin main
-
-            # Re-add CHANGELOG.md (might have changed during rebase)
-            git add CHANGELOG.md
-
-            # Only commit if there are still changes after rebase
-            if ! git diff --staged --quiet; then
-              git commit -m "docs: update CHANGELOG for ${{ steps.version.outputs.version }}"
-              git push origin main
-              echo "✅ Pushed CHANGELOG.md to main branch"
-            else
-              echo "No changes after rebase (CHANGELOG already updated)"
-            fi
+            echo "No changes to commit (CHANGELOG already up to date)"
           fi
 
       - name: Upload release notes artifact
