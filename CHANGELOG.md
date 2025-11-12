@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.7.6] - 2025-11-12
+
+### Changed
+- **Simplified 2-stage polish workflow** - Discovery stage now uses the main AI model, eliminating the confusing discovery_model configuration option
+- **Updated default models** - Changed defaults to `zai-glm-4.6` for discovery and `anthropic/claude-sonnet-4.5` for polish to improve accuracy
+- **Improved polish prompt** - Streamlined changelog-only prompt reduces hallucinations and eliminates first-person language
+
+### Fixed
+- **API key environment variable override** - CLI provider override now correctly updates the corresponding API key environment variable
+- **GitHub Actions workflow** - Fixed configuration to use config file instead of CLI flags for more reliable automation
+---
+
 ## [v0.7.5] - 2025-11-12
 
 ### Added
