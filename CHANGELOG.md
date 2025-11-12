@@ -6,6 +6,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v0.7.6] - 2025-11-12
+
+### Added
+- **Enhanced 2-Stage Polish Workflow for Premium Release Notes**
+  We've introduced a sophisticated two-stage workflow designed to produce the highest quality release notes. This process intelligently combines technical discovery models to identify key changes with customer-facing language models to craft clear, concise, and engaging descriptions. This ensures your release notes are both technically accurate and easily understandable by your audience.
+
+- **Expanded AI Model Access with OpenRouter Support**
+  To provide you with greater flexibility and cost-efficiency, we've integrated support for OpenRouter. This enhancement allows you to access hundreds of AI models through a single, unified API. You can now leverage a wider array of specialized models to best suit your release note generation needs.
+
+- **Configurable File Exclusions for Focused AI Context**
+  You now have the ability to specify files or directories that should be ignored when generating release notes. This feature ensures that our AI models focus exclusively on the most relevant code changes, preventing irrelevant files (like documentation or configuration files) from influencing the generated content and improving the accuracy of your release notes.
+
+### Changed
+- **Updated Default AI Provider to Cerebras (llama-3.3-70b)**
+  We've updated our default AI provider to Cerebras, utilizing the `llama-3.3-70b` model. This change offers improved accessibility and delivers higher quality release note generation right out of the box, enhancing the clarity and precision of your automated changelogs.
+
+- **Granular Configuration for the 2-Stage Polish Workflow**
+  Our new 2-stage polish workflow is now highly configurable, giving you precise control over its operation. You can now define specific discovery and polish models, select preferred providers, and manage API keys independently for each stage. This allows for fine-tuned customization to meet your exact requirements for release note generation.
+
+- **Enhanced GitHub Actions Workflow**
+  We've updated our GitHub Actions workflow to leverage the new `llama-3.3-70b` model and integrate OpenRouter support. This enhancement provides more AI model options directly within your CI/CD pipelines, enabling more powerful and flexible automated release note generation as part of your development process.
+
+### Fixed
+- **Resolved Context Pollution from Meta-Documentation Changes**
+  We've addressed an issue where changes in meta-documentation (e.g., internal project documentation) could inadvertently influence AI-generated changelogs. The system now correctly distinguishes between actual code changes and documentation updates, ensuring your release notes accurately reflect only relevant code modifications.
+
+- **Accurate Reflection of Significant Code Changes**
+  This fix ensures that all impactful code modifications are accurately identified and included in your release notes, regardless of the verbosity or style of the commit messages. You can now be confident that all significant developments are captured and communicated effectively.
+
+- **Correct API Key Environment Variable Overrides**
+  We've resolved a problem where overriding the default AI provider via CLI flags did not correctly update the corresponding API key environment variable. This fix prevents authentication failures and ensures that your specified AI provider settings are consistently applied, allowing for seamless operation.
+---
+
 ## [v0.7.5] - 2025-11-12
 
 ### Added
