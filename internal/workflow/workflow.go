@@ -8,6 +8,7 @@ import (
 
 	"github.com/1broseidon/promptext-notes/internal/ai"
 	"github.com/1broseidon/promptext-notes/internal/analyzer"
+	"github.com/1broseidon/promptext-notes/internal/config"
 	aicontext "github.com/1broseidon/promptext-notes/internal/context"
 	"github.com/1broseidon/promptext-notes/internal/generator"
 	"github.com/1broseidon/promptext-notes/internal/git"
@@ -81,7 +82,7 @@ func fetchGitData(sinceTag string, verbose bool) (*gitData, error) {
 }
 
 // GenerateReleaseNotes orchestrates the full release notes generation process
-func GenerateReleaseNotes(ctx context.Context, opts GenerateOptions, provider ai.Provider) (string, error) {
+func GenerateReleaseNotes(ctx context.Context, opts GenerateOptions, provider ai.Provider, cfg *config.Config) (string, error) {
 	if opts.Verbose {
 		fmt.Fprintf(os.Stderr, "📊 Analyzing changes since %s...\n", opts.SinceTag)
 	}
@@ -128,6 +129,27 @@ func GenerateReleaseNotes(ctx context.Context, opts GenerateOptions, provider ai
 		if err != nil {
 			return "", err
 		}
+
+		// Stage 2: Polish if enabled
+		if cfg != nil && cfg.AI.Polish.Enabled {
+			if opts.Verbose {
+				polishProvider := cfg.GetPolishProvider()
+				polishModel := cfg.GetPolishModel()
+				fmt.Fprintf(os.Stderr, "\n✨ Polishing changelog with %s (%s)...\n", polishProvider, polishModel)
+			}
+
+			polishedContent, err := PolishChangelog(ctx, content, cfg)
+			if err != nil {
+				return "", fmt.Errorf("failed to polish changelog: %w", err)
+			}
+
+			if opts.Verbose {
+				fmt.Fprintln(os.Stderr, "   ✓ Polish complete")
+			}
+
+			return polishedContent, nil
+		}
+
 		return content, nil
 	}
 
@@ -148,7 +170,7 @@ func generateAIContent(ctx context.Context, provider ai.Provider, promptText str
 	// Create AI request using provider's configured defaults
 	req := provider.NewRequest(promptText)
 
-	// Call AI provider
+	// Call AI provider (stage 1: discovery)
 	response, err := provider.Generate(ctx, req)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate AI response: %w", err)

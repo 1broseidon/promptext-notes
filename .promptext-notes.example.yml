@@ -56,6 +56,44 @@ ai:
     # Ollama base URL (optional, defaults to http://localhost:11434)
     # ollama_url: "http://localhost:11434"
 
+  # 2-Stage Polish Workflow (optional)
+  # Combines discovery model's accuracy with polish model's customer-friendly language
+  polish:
+    # Enable 2-stage workflow (can also use --polish CLI flag)
+    enabled: false
+
+    # Stage 1: Discovery model (defaults to main model if not specified)
+    # Use a model optimized for code understanding and accuracy
+    # Example: "llama-3.3-70b" (Cerebras), "x-ai/grok-code-fast-1" (OpenRouter)
+    discovery_model: ""
+
+    # Stage 2: Polish model (defaults to main model if not specified)
+    # Use a model optimized for polished, customer-facing content
+    # Example: "google/gemini-2.5-flash" (OpenRouter)
+    polish_model: ""
+
+    # Optional: Different provider for polish stage (defaults to main provider)
+    # Example: Use Cerebras for discovery, OpenRouter for polish
+    # polish_provider: "openrouter"
+
+    # Optional: API key env var for polish provider (auto-detected if not specified)
+    # polish_api_key_env: "OPENROUTER_API_KEY"
+
+    # Optional: Custom polish prompt (uses default if not specified)
+    # The placeholder %s will be replaced with the draft changelog
+    # polish_prompt: ""
+
+    # Polish stage settings
+    polish_max_tokens: 4000
+    polish_temperature: 0.3
+
+    # Example configuration for recommended 2-stage workflow:
+    # enabled: true
+    # discovery_model: "llama-3.3-70b"          # FREE on Cerebras
+    # polish_model: "google/gemini-2.5-flash"   # $0.0074/run on OpenRouter
+    # polish_provider: "openrouter"
+    # polish_api_key_env: "OPENROUTER_API_KEY"
+
 # Output Configuration
 output:
   # Output format: keepachangelog, conventional

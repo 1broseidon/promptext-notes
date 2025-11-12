@@ -20,10 +20,16 @@ on:
         type: choice
         options:
           - cerebras
+          - openrouter
           - anthropic
           - openai
           - groq
         default: cerebras
+      enable_polish:
+        description: 'Enable 2-stage polish workflow (discovery + refinement)'
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   generate-release-notes:
@@ -92,6 +98,7 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           SINCE_TAG="${{ steps.version.outputs.since_tag }}"
@@ -109,11 +116,15 @@ jobs:
               ;;
             cerebras)
               MODEL="${{ vars.CEREBRAS_MODEL }}"
-              MODEL="${MODEL:-zai-glm-4.6}"
+              MODEL="${MODEL:-llama-3.3-70b}"  # Best free model (9/10 quality)
               ;;
             groq)
               MODEL="${{ vars.GROQ_MODEL }}"
               MODEL="${MODEL:-llama-3.3-70b-versatile}"
+              ;;
+            openrouter)
+              MODEL="${{ vars.OPENROUTER_MODEL }}"
+              MODEL="${MODEL:-google/gemini-2.5-flash}"  # Best quality/cost ratio
               ;;
             *)
               MODEL=""
@@ -131,6 +142,16 @@ jobs:
           # Add since tag if available
           if [ -n "$SINCE_TAG" ]; then
             CMD="$CMD --since $SINCE_TAG"
+          fi
+
+          # Enable polish workflow if requested (default: true for tag pushes)
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # Enable polish by default for tag pushes (customer-facing releases)
+            CMD="$CMD --polish"
+            echo "✨ 2-stage polish workflow enabled for customer-facing release"
+          elif [ "${{ inputs.enable_polish }}" = "true" ]; then
+            CMD="$CMD --polish"
+            echo "✨ 2-stage polish workflow enabled"
           fi
 
           echo "🚀 Running: $CMD"

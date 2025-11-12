@@ -12,6 +12,7 @@ A Go-based CLI tool that generates intelligent, context-aware release notes by c
 - 🔍 **Code Context Extraction**: Uses promptext to extract relevant code changes with token-aware analysis
 - 📝 **Conventional Commits**: Categorizes changes by type (feat, fix, docs, breaking, etc.)
 - 🤖 **Integrated AI Generation**: **NEW!** Generate AI-enhanced changelogs directly with `--generate` flag
+- ✨ **2-Stage Polish Workflow**: **NEW!** Combine accurate discovery with customer-friendly polish for premium quality
 - 🌐 **Multi-Provider Support**: Works with OpenRouter (200+ models), Anthropic, OpenAI, Cerebras, Groq, and local Ollama
 - ⚙️ **YAML Configuration**: Customize behavior with `.promptext-notes.yml` config file
 - 📋 **Keep a Changelog Format**: Produces standardized markdown output
@@ -94,6 +95,65 @@ promptext-notes --version v1.0.0 --ai-prompt > prompt.txt
 
 Then paste the contents of `prompt.txt` into Claude, ChatGPT, or your preferred LLM.
 
+### 2-Stage Polish Workflow ✨
+
+**NEW!** Combine the accuracy of technical discovery models with the polish of customer-facing language models for premium quality changelogs.
+
+**Quick Start:**
+```bash
+# Enable polish with CLI flag (uses config from .promptext-notes.yml)
+promptext-notes --generate --polish --version v1.0.0
+
+# Or configure in .promptext-notes.yml
+```
+
+**How it works:**
+1. **Stage 1 (Discovery)**: Uses a model optimized for code understanding to analyze all changes
+2. **Stage 2 (Polish)**: Refines the output into polished, customer-friendly language
+
+**Recommended Setup (from benchmarks):**
+```yaml
+ai:
+  provider: cerebras
+  model: llama-3.3-70b  # FREE, excellent accuracy
+
+  polish:
+    enabled: true  # Or use --polish CLI flag
+    discovery_model: "llama-3.3-70b"  # Uses main provider (Cerebras - FREE)
+    polish_model: "google/gemini-2.5-flash"  # Customer-friendly polish
+    polish_provider: "openrouter"  # Different provider for polish stage
+    polish_api_key_env: "OPENROUTER_API_KEY"
+    polish_max_tokens: 4000
+    polish_temperature: 0.3
+```
+
+**Benefits:**
+- ✅ Grok catches technical details (only model that caught validation fix in tests)
+- ✅ Gemini 2.5 Flash creates beautiful customer-facing content
+- ✅ Same cost as single Gemini run (~$0.0074)
+- ✅ Can mix FREE models (Cerebras) with paid polish (OpenRouter)
+
+**Example transformation:**
+
+**Before polish** (technical):
+```
+- CLI file exclusion flag - Use `--exclude-files` to specify files...
+```
+
+**After polish** (customer-friendly):
+```
+- **CLI File Exclusion Flag (`--exclude-files`)**: To give you more precise
+  control over the content analyzed by our AI, we've introduced a new
+  command-line interface (CLI) flag: `--exclude-files`. This flag allows
+  you to specify individual files or patterns to be excluded from the AI's
+  context analysis when generating release notes.
+```
+
+**Cost Analysis (from benchmarks):**
+- Single-stage (Gemini 2.5 Flash): $0.0074/run
+- 2-stage (Cerebras → Gemini): $0.0057/run (22% cheaper!)
+- 2-stage (Grok → Gemini): $0.0072/run (same cost as single Gemini)
+
 ### Custom Date Range
 
 Specify a starting tag/commit:
@@ -152,8 +212,10 @@ See `.promptext-notes.example.yml` for full configuration options.
 | `--since` | string | "" | Generate notes since this tag (auto-detects if empty) |
 | `--output` | string | "" | Output file path (stdout if empty) |
 | `--generate` | bool | false | **NEW!** Generate AI-enhanced changelog directly |
+| `--polish` | bool | false | **NEW!** Enable 2-stage polish workflow (discovery + refinement) |
 | `--provider` | string | "" | AI provider (anthropic, openai, cerebras, groq, openrouter, ollama) |
 | `--model` | string | "" | AI model to use (overrides config) |
+| `--exclude-files` | string | "" | Comma-separated files to exclude from AI context (e.g., CHANGELOG.md,README.md) |
 | `--config` | string | ".promptext-notes.yml" | Configuration file path |
 | `--quiet` | bool | false | Suppress progress messages |
 | `--ai-prompt` | bool | false | Generate AI prompt only (legacy mode) |

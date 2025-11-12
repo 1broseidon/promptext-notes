@@ -1,0 +1,63 @@
+# Promptext-Notes Configuration
+# Optimized for production releases with 2-stage polish workflow
+
+version: "1"
+
+ai:
+  provider: cerebras
+  model: llama-3.3-70b  # Best free model (9/10 quality)
+  api_key_env: CEREBRAS_API_KEY
+  max_tokens: 8000
+  temperature: 0.3
+  timeout: 30s
+
+  retry:
+    attempts: 3
+    backoff: exponential
+    initial_delay: 2s
+
+  custom: {}
+
+  # 2-Stage Polish Workflow (Cerebras discovery + OpenRouter polish)
+  polish:
+    enabled: false  # Enable via --polish flag or set to true
+    discovery_model: "llama-3.3-70b"
+    polish_model: "google/gemini-2.5-flash"
+    polish_provider: "openrouter"
+    polish_api_key_env: "OPENROUTER_API_KEY"
+    polish_max_tokens: 4000
+    polish_temperature: 0.3
+
+output:
+  format: keepachangelog
+  sections:
+    - breaking
+    - added
+    - changed
+    - fixed
+    - docs
+
+filters:
+  files:
+    include:
+      - "*.go"
+      - "*.md"
+      - "*.yml"
+      - "*.yaml"
+      - "*.json"
+    exclude:
+      - "CHANGELOG.md"
+      - "README.md"
+      - ".promptext-notes.example.yml"
+      - "*_test.go"
+      - "vendor/*"
+      - "node_modules/*"
+      - ".git/*"
+  commits:
+    exclude_authors:
+      - "dependabot[bot]"
+      - "renovate[bot]"
+      - "github-actions[bot]"
+    exclude_patterns:
+      - "^Merge pull request"
+      - "^Merge branch"

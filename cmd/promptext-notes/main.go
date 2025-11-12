@@ -27,6 +27,7 @@ func main() {
 	providerFlag := flag.String("provider", "", "AI provider (anthropic, openai, cerebras, groq, openrouter, ollama)")
 	modelFlag := flag.String("model", "", "AI model to use")
 	excludeFiles := flag.String("exclude-files", "", "Comma-separated list of files to exclude from AI context (e.g., CHANGELOG.md,README.md)")
+	polish := flag.Bool("polish", false, "Enable 2-stage polish workflow (discovery + refinement)")
 
 	// Other flags
 	quiet := flag.Bool("quiet", false, "Suppress progress messages")
@@ -58,6 +59,10 @@ func main() {
 			files[i] = strings.TrimSpace(file)
 		}
 		cfg.Filters.Files.Exclude = files
+	}
+	if *polish {
+		// Enable polish workflow from CLI
+		cfg.AI.Polish.Enabled = true
 	}
 
 	// Validate configuration
@@ -102,7 +107,7 @@ func main() {
 	defer cancel()
 
 	// Generate release notes
-	outputText, err := workflow.GenerateReleaseNotes(ctx, opts, provider)
+	outputText, err := workflow.GenerateReleaseNotes(ctx, opts, provider, cfg)
 	if err != nil {
 		log.Fatalf("Failed to generate release notes: %v", err)
 	}

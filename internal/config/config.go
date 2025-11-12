@@ -26,6 +26,19 @@ type AIConfig struct {
 	Timeout     time.Duration     `yaml:"timeout"`
 	Retry       RetryConfig       `yaml:"retry"`
 	Custom      map[string]string `yaml:"custom"`
+	Polish      PolishConfig      `yaml:"polish"`
+}
+
+// PolishConfig defines 2-stage polish workflow configuration
+type PolishConfig struct {
+	Enabled           bool    `yaml:"enabled"`
+	DiscoveryModel    string  `yaml:"discovery_model"`    // Model for stage 1 (uses ai.provider)
+	PolishModel       string  `yaml:"polish_model"`       // Model for stage 2
+	PolishProvider    string  `yaml:"polish_provider"`    // Optional: different provider for polish (defaults to ai.provider)
+	PolishAPIKeyEnv   string  `yaml:"polish_api_key_env"` // Optional: API key env var (auto-detected from provider)
+	PolishPrompt      string  `yaml:"polish_prompt"`      // Custom polish prompt (optional)
+	PolishMaxTokens   int     `yaml:"polish_max_tokens"`  // Max tokens for polish stage
+	PolishTemperature float64 `yaml:"polish_temperature"` // Temperature for polish stage
 }
 
 // RetryConfig defines retry behavior
@@ -109,6 +122,16 @@ func Default() *Config {
 				InitialDelay: 2 * time.Second,
 			},
 			Custom: make(map[string]string),
+			Polish: PolishConfig{
+				Enabled:           false,
+				DiscoveryModel:    "", // Uses ai.model if not specified
+				PolishModel:       "", // Uses ai.model if not specified
+				PolishProvider:    "", // Uses ai.provider if not specified
+				PolishAPIKeyEnv:   "", // Auto-detected from provider
+				PolishPrompt:      "", // Uses default prompt
+				PolishMaxTokens:   4000,
+				PolishTemperature: 0.3,
+			},
 		},
 		Output: OutputConfig{
 			Format: "keepachangelog",
@@ -303,5 +326,68 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("invalid backoff strategy: %s (supported: exponential, linear, constant)", c.AI.Retry.Backoff)
 	}
 
+	// Validate polish config if enabled
+	if c.AI.Polish.Enabled {
+		polishProvider := c.GetPolishProvider()
+		if !validProviders[polishProvider] {
+			return fmt.Errorf("invalid polish provider: %s (supported: anthropic, openai, cerebras, groq, openrouter, ollama)", polishProvider)
+		}
+	}
+
 	return nil
+}
+
+// GetPolishProvider returns the effective polish provider (defaults to main provider)
+func (c *Config) GetPolishProvider() string {
+	if c.AI.Polish.PolishProvider != "" {
+		return c.AI.Polish.PolishProvider
+	}
+	return c.AI.Provider
+}
+
+// GetDiscoveryModel returns the effective discovery model (defaults to main model)
+func (c *Config) GetDiscoveryModel() string {
+	if c.AI.Polish.DiscoveryModel != "" {
+		return c.AI.Polish.DiscoveryModel
+	}
+	return c.AI.Model
+}
+
+// GetPolishModel returns the effective polish model (defaults to main model)
+func (c *Config) GetPolishModel() string {
+	if c.AI.Polish.PolishModel != "" {
+		return c.AI.Polish.PolishModel
+	}
+	return c.AI.Model
+}
+
+// GetPolishAPIKeyEnv returns the API key env var for polish provider
+func (c *Config) GetPolishAPIKeyEnv() string {
+	if c.AI.Polish.PolishAPIKeyEnv != "" {
+		return c.AI.Polish.PolishAPIKeyEnv
+	}
+	return GetDefaultAPIKeyEnv(c.GetPolishProvider())
+}
+
+// GetPolishAPIKey retrieves the polish API key from the environment
+func (c *Config) GetPolishAPIKey() (string, error) {
+	polishProvider := c.GetPolishProvider()
+
+	// Same provider as main - use main API key
+	if polishProvider == c.AI.Provider {
+		return c.GetAPIKey()
+	}
+
+	// Different provider - get its API key
+	apiKeyEnv := c.GetPolishAPIKeyEnv()
+	if apiKeyEnv == "" {
+		return "", nil // No API key required (e.g., Ollama)
+	}
+
+	key := os.Getenv(apiKeyEnv)
+	if key == "" {
+		return "", fmt.Errorf("polish API key not found in environment variable: %s", apiKeyEnv)
+	}
+
+	return key, nil
 }
