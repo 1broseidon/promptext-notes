@@ -250,6 +250,142 @@ func TestGetAPIKey(t *testing.T) {
 	}
 }
 
+func TestAutoExcludeMeta(t *testing.T) {
+	// Test that meta files are auto-excluded when AutoExcludeMeta is true
+	config := &Config{
+		Filters: FiltersConfig{
+			Files: FileFilters{
+				AutoExcludeMeta: true,
+				Exclude: []string{
+					"*_test.go",
+					"vendor/*",
+				},
+			},
+		},
+	}
+
+	applyDefaults(config)
+
+	// Check that meta exclusions were merged
+	expectedExclusions := []string{
+		"*_test.go",
+		"vendor/*",
+		"CHANGELOG.md",
+		"README.md",
+		".github/**",
+		".vscode/**",
+		".idea/**",
+		"*.example.*",
+		".promptext-notes*.yml",
+		"**/.gitignore",
+		"**/.*ignore",
+	}
+
+	if len(config.Filters.Files.Exclude) != len(expectedExclusions) {
+		t.Errorf("Expected %d exclusions, got %d", len(expectedExclusions), len(config.Filters.Files.Exclude))
+	}
+
+	// Check all expected exclusions are present
+	exclusionMap := make(map[string]bool)
+	for _, excl := range config.Filters.Files.Exclude {
+		exclusionMap[excl] = true
+	}
+
+	for _, expected := range expectedExclusions {
+		if !exclusionMap[expected] {
+			t.Errorf("Expected exclusion not found: %s", expected)
+		}
+	}
+}
+
+func TestAutoExcludeMetaDisabled(t *testing.T) {
+	// Test that meta files are NOT auto-excluded when AutoExcludeMeta is false
+	config := &Config{
+		Filters: FiltersConfig{
+			Files: FileFilters{
+				AutoExcludeMeta: false,
+				Exclude: []string{
+					"*_test.go",
+					"vendor/*",
+				},
+			},
+		},
+	}
+
+	applyDefaults(config)
+
+	// Check that ONLY the original exclusions remain (no meta exclusions added)
+	expectedExclusions := []string{
+		"*_test.go",
+		"vendor/*",
+	}
+
+	if len(config.Filters.Files.Exclude) != len(expectedExclusions) {
+		t.Errorf("Expected %d exclusions, got %d (meta exclusions should not be added)", len(expectedExclusions), len(config.Filters.Files.Exclude))
+	}
+}
+
+func TestMergeUnique(t *testing.T) {
+	tests := []struct {
+		name     string
+		a        []string
+		b        []string
+		expected []string
+	}{
+		{
+			name:     "No duplicates",
+			a:        []string{"a", "b"},
+			b:        []string{"c", "d"},
+			expected: []string{"a", "b", "c", "d"},
+		},
+		{
+			name:     "With duplicates",
+			a:        []string{"a", "b", "c"},
+			b:        []string{"b", "c", "d"},
+			expected: []string{"a", "b", "c", "d"},
+		},
+		{
+			name:     "Empty slices",
+			a:        []string{},
+			b:        []string{},
+			expected: []string{},
+		},
+		{
+			name:     "First empty",
+			a:        []string{},
+			b:        []string{"a", "b"},
+			expected: []string{"a", "b"},
+		},
+		{
+			name:     "Second empty",
+			a:        []string{"a", "b"},
+			b:        []string{},
+			expected: []string{"a", "b"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := mergeUnique(tt.a, tt.b)
+			if len(result) != len(tt.expected) {
+				t.Errorf("Expected length %d, got %d", len(tt.expected), len(result))
+			}
+
+			// Convert to map for easy comparison
+			resultMap := make(map[string]bool)
+			for _, item := range result {
+				resultMap[item] = true
+			}
+
+			for _, expected := range tt.expected {
+				if !resultMap[expected] {
+					t.Errorf("Expected item %s not found in result", expected)
+				}
+			}
+		})
+	}
+}
+
 func TestValidate(t *testing.T) {
 	tests := []struct {
 		name      string

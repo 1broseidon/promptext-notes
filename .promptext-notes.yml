@@ -40,6 +40,10 @@ output:
 
 filters:
   files:
+    # Auto-exclude meta files (CI, configs, README, CHANGELOG, etc.)
+    # Prevents internal tooling changes from appearing in user-facing changelogs
+    auto_exclude_meta: true
+
     include:
       - "*.go"
       - "*.md"
@@ -47,9 +51,8 @@ filters:
       - "*.yaml"
       - "*.json"
     exclude:
-      - "CHANGELOG.md"
-      - "README.md"
-      - ".promptext-notes.example.yml"
+      # Meta files are auto-excluded (no need to list them here)
+      # Only project-specific exclusions:
       - "*_test.go"
       - "vendor/*"
       - "node_modules/*"

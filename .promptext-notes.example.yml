@@ -110,6 +110,23 @@ output:
 filters:
   # File filters
   files:
+    # Auto-exclude meta files (default: true)
+    # When enabled, automatically excludes CI configs, CHANGELOG, README, etc.
+    # This prevents internal changes from appearing in user-facing changelogs
+    # Set to false to include all files (useful for public libraries showing CI/tooling changes)
+    auto_exclude_meta: true
+
+    # Auto-excluded patterns when auto_exclude_meta: true (no need to list these):
+    #   - CHANGELOG.md          (existing changelog)
+    #   - README.md             (project documentation)
+    #   - .github/**            (GitHub Actions, workflows, issue templates)
+    #   - .vscode/**            (VS Code configs)
+    #   - .idea/**              (JetBrains configs)
+    #   - *.example.*           (example files)
+    #   - .promptext-notes*.yml (this tool's config)
+    #   - **/.gitignore         (git ignore files)
+    #   - **/.*ignore           (all ignore files)
+
     # Include patterns (glob format)
     include:
       - "*.go"
@@ -122,19 +139,17 @@ filters:
       - "*.tsx"
       - "*.py"
 
-    # Exclude patterns (by filename - useful for preventing meta-documentation
-    # from influencing AI-generated changelogs)
-    # NOTE: Add files here that you don't want the AI to see when generating changelogs
+    # Additional exclude patterns (project-specific)
+    # Note: Meta files are already auto-excluded above
+    # Only list project-specific exclusions here
     exclude:
-      - "CHANGELOG.md"               # Prevent AI from seeing existing changelog
-      - "README.md"                  # Exclude general project documentation
-      - ".promptext-notes.example.yml"  # Exclude example config
       - "*_test.go"                  # Exclude test files
       - "vendor/*"                   # Exclude vendor dependencies
       - "node_modules/*"             # Exclude Node.js dependencies
       - ".git/*"                     # Exclude git metadata
       - "dist/*"                     # Exclude build output
       - "build/*"                    # Exclude build artifacts
+      - "docs/internal/**"           # Exclude internal documentation
 
   # Commit filters
   commits:

@@ -62,8 +62,9 @@ type FiltersConfig struct {
 
 // FileFilters defines file inclusion/exclusion patterns
 type FileFilters struct {
-	Include []string `yaml:"include"`
-	Exclude []string `yaml:"exclude"`
+	Include         []string `yaml:"include"`
+	Exclude         []string `yaml:"exclude"`
+	AutoExcludeMeta bool     `yaml:"auto_exclude_meta"` // Auto-exclude CI/config/meta files (default: true)
 }
 
 // CommitFilters defines commit filtering rules
@@ -102,6 +103,21 @@ func LoadOrDefault(path string) *Config {
 		return Default()
 	}
 	return config
+}
+
+// GetDefaultMetaExclusions returns file patterns that are auto-excluded when AutoExcludeMeta is true
+func GetDefaultMetaExclusions() []string {
+	return []string{
+		"CHANGELOG.md",
+		"README.md",
+		".github/**",
+		".vscode/**",
+		".idea/**",
+		"*.example.*",
+		".promptext-notes*.yml",
+		"**/.gitignore",
+		"**/.*ignore",
+	}
 }
 
 // Default returns a configuration with sensible defaults
@@ -156,6 +172,7 @@ func Default() *Config {
 					"node_modules/*",
 					".git/*",
 				},
+				AutoExcludeMeta: true, // Enable meta file exclusion by default
 			},
 			Commits: CommitFilters{
 				ExcludeAuthors: []string{
@@ -224,12 +241,41 @@ func applyDefaults(config *Config) {
 	if len(config.Filters.Files.Exclude) == 0 {
 		config.Filters.Files.Exclude = defaults.Filters.Files.Exclude
 	}
+
+	// Apply auto-exclude-meta (merge with existing exclusions)
+	// Note: AutoExcludeMeta defaults to true if not explicitly set to false
+	if config.Filters.Files.AutoExcludeMeta {
+		config.Filters.Files.Exclude = mergeUnique(config.Filters.Files.Exclude, GetDefaultMetaExclusions())
+	}
+
 	if len(config.Filters.Commits.ExcludeAuthors) == 0 {
 		config.Filters.Commits.ExcludeAuthors = defaults.Filters.Commits.ExcludeAuthors
 	}
 	if len(config.Filters.Commits.ExcludePatterns) == 0 {
 		config.Filters.Commits.ExcludePatterns = defaults.Filters.Commits.ExcludePatterns
 	}
+}
+
+// mergeUnique merges two string slices, removing duplicates
+func mergeUnique(a, b []string) []string {
+	seen := make(map[string]bool)
+	result := make([]string, 0, len(a)+len(b))
+
+	for _, item := range a {
+		if !seen[item] {
+			seen[item] = true
+			result = append(result, item)
+		}
+	}
+
+	for _, item := range b {
+		if !seen[item] {
+			seen[item] = true
+			result = append(result, item)
+		}
+	}
+
+	return result
 }
 
 // GetDefaultAPIKeyEnv returns the default environment variable for API key

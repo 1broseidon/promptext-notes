@@ -132,6 +132,7 @@ jobs:
           esac
 
           # Build command using config file (GLM + Claude Sonnet 4.5)
+          # Config also enables auto-exclude-meta (v0.8.0+): excludes CI/configs/CHANGELOG/README
           CMD="promptext-notes --generate --output release-notes.md --version $VERSION"
 
           # Add since tag if available
@@ -143,6 +144,7 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then
             CMD="$CMD --polish"
             echo "✨ 2-stage polish workflow enabled: GLM (discovery) + Claude Sonnet 4.5 (polish)"
+            echo "🚫 Auto-exclude-meta enabled: CI configs, CHANGELOG, README excluded from context"
           elif [ "${{ inputs.enable_polish }}" = "true" ]; then
             CMD="$CMD --polish"
             echo "✨ 2-stage polish workflow enabled"
