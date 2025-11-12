@@ -12,7 +12,7 @@ A Go-based CLI tool that generates intelligent, context-aware release notes by c
 - 🔍 **Code Context Extraction**: Uses promptext to extract relevant code changes with token-aware analysis
 - 📝 **Conventional Commits**: Categorizes changes by type (feat, fix, docs, breaking, etc.)
 - 🤖 **Integrated AI Generation**: **NEW!** Generate AI-enhanced changelogs directly with `--generate` flag
-- 🌐 **Multi-Provider Support**: Works with Anthropic, OpenAI, Cerebras, Groq, and local Ollama models
+- 🌐 **Multi-Provider Support**: Works with OpenRouter (200+ models), Anthropic, OpenAI, Cerebras, Groq, and local Ollama
 - ⚙️ **YAML Configuration**: Customize behavior with `.promptext-notes.yml` config file
 - 📋 **Keep a Changelog Format**: Produces standardized markdown output
 - ⚡ **Fast & Lightweight**: Single binary with no runtime dependencies (except Git)
@@ -152,7 +152,7 @@ See `.promptext-notes.example.yml` for full configuration options.
 | `--since` | string | "" | Generate notes since this tag (auto-detects if empty) |
 | `--output` | string | "" | Output file path (stdout if empty) |
 | `--generate` | bool | false | **NEW!** Generate AI-enhanced changelog directly |
-| `--provider` | string | "" | AI provider (anthropic, openai, cerebras, groq, ollama) |
+| `--provider` | string | "" | AI provider (anthropic, openai, cerebras, groq, openrouter, ollama) |
 | `--model` | string | "" | AI model to use (overrides config) |
 | `--config` | string | ".promptext-notes.yml" | Configuration file path |
 | `--quiet` | bool | false | Suppress progress messages |
@@ -188,7 +188,8 @@ When you push a version tag (e.g., `v1.0.0`), the workflow automatically:
 
 | Provider | Default Model | Context Limit | Cost | Setup URL |
 |----------|---------------|---------------|------|-----------|
-| **Cerebras** 🆕 | zai-glm-4.6 | 65K tokens | ✅ Free | [cerebras.ai](https://cerebras.ai) |
+| **OpenRouter** 🆕 | openai/gpt-4o-mini | Varies | 💰 Pay-as-you-go | [openrouter.ai/keys](https://openrouter.ai/keys) |
+| **Cerebras** | zai-glm-4.6 | 65K tokens | ✅ Free | [cerebras.ai](https://cerebras.ai) |
 | **Groq** | llama-3.3-70b-versatile | 32K tokens | ✅ Free | [console.groq.com](https://console.groq.com/keys) |
 | **Ollama** | llama3.2 | Varies | ✅ Free (Local) | [ollama.com](https://ollama.com) |
 | **OpenAI** | gpt-4o-mini | 128K tokens | 💰 $0.15/$0.60 per 1M | [platform.openai.com](https://platform.openai.com/api-keys) |
@@ -202,7 +203,8 @@ When you push a version tag (e.g., `v1.0.0`), the workflow automatically:
    - Go to your repository → **Settings** → **Secrets and variables** → **Actions**
    - Click **"New repository secret"**
    - Add one or more of these secrets:
-     - `CEREBRAS_API_KEY` - For Cerebras (recommended - free, best for large prompts)
+     - `OPENROUTER_API_KEY` - For OpenRouter (access 200+ models through one API)
+     - `CEREBRAS_API_KEY` - For Cerebras (free, best for large prompts)
      - `GROQ_API_KEY` - For Groq (free, good for smaller prompts)
      - `OPENAI_API_KEY` - For OpenAI
      - `ANTHROPIC_API_KEY` - For Anthropic
@@ -236,6 +238,10 @@ promptext-notes --generate --version v1.0.0
 export OPENAI_API_KEY="your-key-here"
 promptext-notes --generate --provider openai --model gpt-4o-mini --version v1.0.0
 
+# Using OpenRouter (access 200+ models through one API)
+export OPENROUTER_API_KEY="your-key-here"
+promptext-notes --generate --provider openrouter --model anthropic/claude-sonnet-4 --version v1.0.0
+
 # Using Cerebras (default, free tier, best for large prompts)
 export CEREBRAS_API_KEY="your-key-here"
 promptext-notes --generate --version v1.0.0
@@ -264,6 +270,14 @@ export OPENAI_API_KEY="your-key-here"
 ```
 
 ### Available Models by Provider
+
+**OpenRouter** (pay-as-you-go, access 200+ models):
+- `openai/gpt-4o-mini` (default) - Cost-effective OpenAI model
+- `anthropic/claude-sonnet-4` - Latest Claude model
+- `google/gemini-pro-1.5` - Google's Gemini
+- `meta-llama/llama-3.3-70b-instruct` - Open source Llama
+- `openai/gpt-4o` - Premium OpenAI model
+- And 200+ more models! See [openrouter.ai/models](https://openrouter.ai/models)
 
 **Cerebras** (free, ultra-fast, best for large prompts):
 - `zai-glm-4.6` (default) - Multilingual support, best for large context

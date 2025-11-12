@@ -77,6 +77,8 @@ func NewProvider(cfg *config.Config) (Provider, error) {
 		return NewCerebrasProvider(apiKey, cfg)
 	case "groq":
 		return NewGroqProvider(apiKey, cfg)
+	case "openrouter":
+		return NewOpenRouterProvider(apiKey, cfg)
 	case "ollama":
 		return NewOllamaProvider(cfg)
 	default:

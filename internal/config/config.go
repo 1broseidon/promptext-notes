@@ -222,6 +222,8 @@ func GetDefaultAPIKeyEnv(provider string) string {
 		return "CEREBRAS_API_KEY"
 	case "groq":
 		return "GROQ_API_KEY"
+	case "openrouter":
+		return "OPENROUTER_API_KEY"
 	case "ollama":
 		return "" // No API key needed for local Ollama
 	default:
@@ -245,6 +247,8 @@ func getDefaultModel(provider string) string {
 		return "llama-3.3-70b"
 	case "groq":
 		return "llama-3.3-70b-versatile"
+	case "openrouter":
+		return "openai/gpt-4o-mini" // Cost-effective default
 	case "ollama":
 		return "llama3.2"
 	default:

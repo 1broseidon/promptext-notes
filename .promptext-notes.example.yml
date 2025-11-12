@@ -5,7 +5,7 @@ version: "1"
 
 # AI Provider Configuration
 ai:
-  # Provider to use: anthropic, openai, cerebras, groq, ollama
+  # Provider to use: anthropic, openai, cerebras, groq, openrouter, ollama
   provider: cerebras
 
   # Model to use (exact API model name - no aliases)
@@ -14,6 +14,8 @@ ai:
   # OpenAI: gpt-4o-mini, gpt-4o, gpt-4-turbo
   # Cerebras: zai-glm-4.6, gpt-oss-120b, llama-3.3-70b
   # Groq: llama-3.3-70b-versatile, mixtral-8x7b-32768, moonshotai/kimi-k2-instruct-0905
+  # OpenRouter: openai/gpt-4o-mini, anthropic/claude-sonnet-4, google/gemini-pro-1.5, etc.
+  #   (format: provider/model - access hundreds of models through one API)
   # Ollama: llama3.2, codellama, etc. (models you have pulled locally)
   model: zai-glm-4.6
 
@@ -46,6 +48,10 @@ ai:
   custom:
     # Anthropic API version (optional)
     # anthropic_version: "2023-06-01"
+
+    # OpenRouter optional headers for rankings on openrouter.ai
+    # http_referer: "https://your-app-url.com"  # Your app's site URL
+    # x_title: "Your App Name"                  # Your app's title
 
     # Ollama base URL (optional, defaults to http://localhost:11434)
     # ollama_url: "http://localhost:11434"
@@ -121,8 +127,11 @@ filters:
 # 3. Generate for specific version range:
 #    promptext-notes --generate --version v1.0.0 --since v0.9.0
 #
-# 4. Use local Ollama (free, no API key):
+# 4. Use OpenRouter (access hundreds of models through one API):
+#    promptext-notes --generate --provider openrouter --model anthropic/claude-sonnet-4
+#
+# 5. Use local Ollama (free, no API key):
 #    promptext-notes --generate --provider ollama --model llama3.2
 #
-# 5. Save to file:
+# 6. Save to file:
 #    promptext-notes --generate --output CHANGELOG.md
